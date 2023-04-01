@@ -1,4 +1,6 @@
 using Data;
+using Data.Contracts;
+using Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +15,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ZPakContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("ZPakServer")));
 
+builder.Services.AddScoped(typeof(IRepository<>),typeof(Repository<>));
+builder.Services.AddTransient<IUserRepository, UserRepository>();
 
 
 var app = builder.Build();

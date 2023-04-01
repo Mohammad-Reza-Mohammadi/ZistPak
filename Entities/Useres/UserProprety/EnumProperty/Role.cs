@@ -12,7 +12,8 @@ namespace Entities.User.UserProprety.EnumProperty
         Contractor = 1,            //پیمانکار
         ExhibitorEmployee = 2,     // غرفه دار         
         CarEmployee = 3,           // ماشینی
-        Customer = 4,              // مشتری         
+        Customer = 4,              // مشتری
+        //Admin =5                   // مدیر
 
 
     }

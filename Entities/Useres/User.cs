@@ -14,6 +14,10 @@ namespace Entities.Useres
 {
     public class User:IntBaseEntity
     {
+        public User()
+        {   
+            IsActive = true;
+        }
         public string HashPassword { get; set; }
         public int? Age { get; set; }
         public string PhoneNumber { get; set; }
