@@ -3,6 +3,7 @@ using Entities.Municipality;
 using Entities.User.Enum;
 using Entities.User.Owned;
 using Entities.User.UserProprety.EnumProperty;
+using Entities.Useres.UserProprety.EnumProperty;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.SymbolStore;
@@ -29,6 +30,7 @@ namespace Entities.Useres
         #region Enum Property
         public Gender Gender { get; set; }
         public Role Role { get; set; }
+        public PermissionLevel permissionLevel { get; set; }
         #endregion
 
         #region OwnedType Property

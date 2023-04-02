@@ -4,6 +4,7 @@ using ECommerce.Utility;
 using Entities.Cargo;
 using Entities.Cargo.CargoStatus;
 using Entities.Useres;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
@@ -14,6 +15,7 @@ using System.Security.Cryptography.Xml;
 
 namespace presentation.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CargoController : ControllerBase
@@ -25,13 +27,16 @@ namespace presentation.Controllers
             this.cargoRepository = _cargoRepository;
         }
 
+
+        [Authorize(Roles = "Admin,Supervisor")]
         [HttpGet]
-        public async Task<ActionResult<List<Cargo>>> Get(CancellationToken cancellationToken)
+        public async Task<List<Cargo>> Get(CancellationToken cancellationToken)
         {
             var cargos = await cargoRepository.TableNoTracking.ToListAsync(cancellationToken);
-            return Ok(cargos);
+            return cargos;
         }
 
+        [Authorize(Roles = "Admin,Supervisor")]
         [HttpPost]
         public async Task<ActionResult> AddCargo(CargoDto cargoDto, CancellationToken cancellationToken)
         {
@@ -83,6 +88,7 @@ namespace presentation.Controllers
             #endregion
         }
 
+        [Authorize(Roles = "Admin,Supervisor")]
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Cargo>> GetCargoById(int id, CancellationToken cancellationToken)
         {
@@ -91,11 +97,11 @@ namespace presentation.Controllers
                 return NotFound();
             return cargo;
         }
-
+        [Authorize(Roles = "Admin,Supervisor")]
         [HttpPut]
         public async Task<ActionResult> Update(UpdateCargoDto updateCargoDto, CancellationToken cancellationToken)
         {
-            int cargoId = updateCargoDto.CargoId;
+            int cargoId = updateCargoDto.cargoId;
 
             Cargo cargo = await cargoRepository.GetByIdAsync(cancellationToken, cargoId);
             if (cargo == null)
@@ -106,14 +112,13 @@ namespace presentation.Controllers
             cargo.UpdateDate = DateTime.Now.ToShamsi();
             cargo.Name = updateCargoDto.Name;
             cargo.status = updateCargoDto.status;
-            cargo.Rating = updateCargoDto.Rating;
-            cargo.Whight = updateCargoDto.Whight;
+            //تغییرات وزن و تعداد آیتم ها با آپدیت کردن آیتم های محموله انجام میشود
 
             await cargoRepository.UpdateAsync(cargo, cancellationToken);
 
             return Ok();
         }
-
+        [Authorize(Roles = "Admin,Supervisor")]
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken)
         {

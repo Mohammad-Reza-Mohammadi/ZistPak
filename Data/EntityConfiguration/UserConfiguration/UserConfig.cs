@@ -33,6 +33,7 @@ namespace Data.EntityConfiguration.UserConfiguration
             builder.Property(c => c.IsActive).IsRequired();
             builder.Property(c => c.Gender).IsRequired();
             builder.Property(c => c.Role).IsRequired();
+            builder.Property(c => c.permissionLevel).IsRequired();
             #endregion
 
             #region Owned Type Property

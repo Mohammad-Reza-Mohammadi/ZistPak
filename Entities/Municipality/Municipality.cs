@@ -14,6 +14,7 @@ namespace Entities.Municipality
     {
         public string Name { get; set; }
         public string Hashpassword { get; set; }
+        public string token { get; set; }
         public Region Region { get; set; }
 
         #region Navigation Property

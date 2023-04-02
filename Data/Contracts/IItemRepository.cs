@@ -10,7 +10,6 @@ namespace Data.Contracts
 {
     public interface IItemRepository:IRepository<Item>
     {
-        public Task AddItemAsync(IEnumerable<Item> Items, CancellationToken cancellationToken);
         public Task<List<Item>> GetItemByCargoId(int CargoId, CancellationToken cancellationToken);
 
     }

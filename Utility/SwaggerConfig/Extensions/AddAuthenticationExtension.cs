@@ -15,6 +15,14 @@ namespace Utility.SwaggerConfig
     {
         public static IServiceCollection AddOurAuthentication(this IServiceCollection Services,AppSettings appSettings)
         {
+            #region Policy base
+            // Authorization service
+            //services.AddAuthorization(options =>
+            //{
+            //    options.AddPolicy("GetAllUser",
+            //        policy => policy.RequireClaim("AccessAllUser", "True"));
+            //});
+            #endregion
 
             var key = Encoding.ASCII.GetBytes(appSettings.Secret);
             Services.AddAuthentication(options =>

@@ -16,11 +16,6 @@ namespace Data.Repositories
      
         }
 
-        public async Task AddItemAsync(IEnumerable<Item> Items, CancellationToken cancellationToken)
-        {
-            await base.AddRangeAsync(Items, cancellationToken);
-            return;
-        }
 
         public async Task<List<Item>> GetItemByCargoId(int CargoId, CancellationToken cancellationToken)
         {

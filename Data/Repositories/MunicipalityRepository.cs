@@ -1,41 +1,50 @@
 ﻿using Data.Contracts;
+using Entities.Municipality;
+using Entities.Municipality.Enum;
 using Entities.Useres;
-using Microsoft.AspNetCore.Http;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 using Utility.SwaggerConfig;
 using Utility.Utility;
 
 namespace Data.Repositories
 {
-    public class UserRepository : Repository<User>, IUserRepository
+    public class MunicipalityRepository : Repository<Municipality>, IMunicipalityRepository
     {
         private readonly AppSettings _appSettings;
-        public UserRepository(ZPakContext dbContext, IOptions<AppSettings> appSettings)
+
+        public MunicipalityRepository(ZPakContext dbContext, IOptions<AppSettings> appSettings)
             : base(dbContext)
         {
             _appSettings = appSettings.Value;
         }
 
-        public  Task AddAsync(User user, string password, CancellationToken cancellationToken)
+   
+
+        public async Task AddAsync(Municipality municipality, string password, CancellationToken cancellationToken)
         {
             var passswordHash = SecurityHelper.GetSha256Hash(password);
-            user.HashPassword = passswordHash;
-            return base.AddAsync(user, cancellationToken);
+            municipality.Hashpassword = passswordHash;
+            await base.AddAsync(municipality, cancellationToken);
+            return;
         }
 
-        public async Task<User> Login(string firstName, string password, CancellationToken cancellationToken)
+        public async Task<Municipality> LoginAsync(string name, string password, CancellationToken cancellationToken)
         {
             var passswordHash = SecurityHelper.GetSha256Hash(password);
-            var user = await Table.Where(u => u.FullName.FirstName == firstName && u.HashPassword == passswordHash).SingleOrDefaultAsync();
-            if (user == null)
+            var municipality = await Table.Where(u => u.Name == name && u.Hashpassword == passswordHash).SingleOrDefaultAsync();
+            if (municipality == null)
             {
-                return null ;
+                return null;
             }
 
             // authenticaiton successfo so generate jwt token
@@ -45,9 +54,8 @@ namespace Data.Repositories
             claims.AddClaims(new[]
             {
                 //Role Base
-                new Claim(ClaimTypes.NameIdentifier , user.Id.ToString()),
-                new Claim(ClaimTypes.Role , user.Role.ToString()),
-                //new Claim(ClaimTypes.authen , user.permissionLevel.ToString()),
+                new Claim(ClaimTypes.NameIdentifier , municipality.Id.ToString()),     
+                new Claim(ClaimTypes.Role , municipality.Region.ToString()),     
 
 
              #region Claim or Policy
@@ -65,21 +73,13 @@ namespace Data.Repositories
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            user.Token = tokenHandler.WriteToken(token);
+            municipality.token = tokenHandler.WriteToken(token);
 
             //The password will not be returned
-            user.HashPassword = null;
-            return user;
+            municipality.Hashpassword = null;
+            return municipality;
 
         }
 
-        public async Task UpdateUserAsync(User user,int userId,IFormFile userImageFile, CancellationToken cancellationToken)
-        {
-            string ImagPath = UserImageExtension.ImgeToString(userImageFile);
-            user.Image = ImagPath;
-            await base.UpdateAsync(user, cancellationToken);
-            return; 
-            
-        }
     }
 }

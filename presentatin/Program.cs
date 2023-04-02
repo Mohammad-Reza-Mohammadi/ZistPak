@@ -1,9 +1,11 @@
 ﻿using Data;
 using Data.Contracts;
 using Data.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Utility.SwaggerConfig;
+//using Utility.SwaggerConfig.Permissions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +28,10 @@ options.UseSqlServer(builder.Configuration.GetConnectionString("ZPakServer")));
 builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<ICargoRepository , CargoRepository>();
-builder.Services.AddTransient<IItemRepository , ItemRepository>();
+builder.Services.AddTransient<IItemRepository, ItemRepository>();
+builder.Services.AddTransient<IMunicipalityRepository, MunicipalityRepository>();
+//builder.Services.AddSingleton<IAuthorizationPolicyProvider, AuthorizationPolicyProvider>();
+
 
 var app = builder.Build();
 
