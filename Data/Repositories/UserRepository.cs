@@ -35,7 +35,7 @@ namespace Data.Repositories
             var user = await Table.Where(u => u.FullName.FirstName == firstName && u.HashPassword == passswordHash).SingleOrDefaultAsync();
             if (user == null)
             {
-                return null;
+                return null ;
             }
 
             // authenticaiton successfo so generate jwt token
@@ -45,6 +45,7 @@ namespace Data.Repositories
             claims.AddClaims(new[]
             {
                 //Role Base
+                new Claim(ClaimTypes.NameIdentifier , user.Id.ToString()),
                 new Claim(ClaimTypes.Role , user.Role.ToString()),
 
              #region Claim or Policy
@@ -70,11 +71,12 @@ namespace Data.Repositories
 
         }
 
-        public Task UpdateUserAsync(User user,int userId,IFormFile userImageFile, CancellationToken cancellationToken)
+        public async Task UpdateUserAsync(User user,int userId,IFormFile userImageFile, CancellationToken cancellationToken)
         {
             string ImagPath = UserImageExtension.ImgeToString(userImageFile);
             user.Image = ImagPath;
-            return base.UpdateAsync(user, cancellationToken);
+            await base.UpdateAsync(user, cancellationToken);
+            return; 
             
         }
     }

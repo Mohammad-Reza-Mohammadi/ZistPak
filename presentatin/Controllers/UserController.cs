@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using presentation.Models;
 using System.Drawing;
+using System.Security.Claims;
 
 namespace presentation.Controllers
 {
@@ -71,6 +72,7 @@ namespace presentation.Controllers
             return Content($"{signupUserDto.FirstName} : با موفقیت اضافه شد ");
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<User>> Login(string FirstName, string password, CancellationToken cancellationToken)
         {
@@ -80,30 +82,35 @@ namespace presentation.Controllers
             return user;
         }
 
-        // نیاز به احراز هویت
         [HttpPut]
-        public async Task<ActionResult> Update(int id,[FromForm] UpdateUserDto user, CancellationToken cancellationToken)
+        public async Task<ActionResult> Update([FromForm] UpdateUserDto user, CancellationToken cancellationToken)
         {
-            var updateUser = await userRepository.GetByIdAsync(cancellationToken, id);
-        
-            updateUser.FullName.FirstName = user.FirstName;
-            updateUser.FullName.LastName = user.LasteName;
-            updateUser.Age = user.Age;
-            updateUser.PhoneNumber = user.PhoneNumber;
-            updateUser.Email = user.Email;
-            updateUser.Addresses.ElementAt(0).AddressTitle = user.AddressTitle;
-            updateUser.Addresses.ElementAt(0).City = user.City;
-            updateUser.Addresses.ElementAt(0).Town = user.Town;
-            updateUser.Addresses.ElementAt(0).Street = user.Street;
-            updateUser.Addresses.ElementAt(0).PostalCode = user.PostalCode;
+            var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId1 =Convert.ToInt32(userId);
+            var GetUser = await userRepository.GetByIdAsync(cancellationToken, userId1);
 
-            await userRepository.UpdateUserAsync(updateUser, updateUser.Id, user.ProductImage, cancellationToken);
+            #region update user
+
+            GetUser.FullName.FirstName = user.FirstName;
+            GetUser.FullName.LastName = user.LasteName;
+            GetUser.Age = user.Age;
+            GetUser.PhoneNumber = user.PhoneNumber;
+            GetUser.Email = user.Email;
+            // ElementAt(i)
+            GetUser.Addresses.ElementAt(0).AddressTitle = user.AddressTitle;
+            GetUser.Addresses.ElementAt(0).City = user.City;
+            GetUser.Addresses.ElementAt(0).Town = user.Town;
+            GetUser.Addresses.ElementAt(0).Street = user.Street;
+            GetUser.Addresses.ElementAt(0).PostalCode = user.PostalCode;
+
+            #endregion
+
+            await userRepository.UpdateUserAsync(GetUser, userId1, user.ProductImage, cancellationToken);
 
 
             return Ok();
         }
 
-        // با کنسلیشن توکن دیگر ریکوئستهای اضافه پردازش نمیشوند
         [HttpDelete]
         public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken)
         {

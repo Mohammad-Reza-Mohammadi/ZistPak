@@ -25,6 +25,8 @@ options.UseSqlServer(builder.Configuration.GetConnectionString("ZPakServer")));
 
 builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddTransient<IUserRepository, UserRepository>();
+builder.Services.AddTransient<ICargoRepository , CargoRepository>();
+builder.Services.AddTransient<IItemRepository , ItemRepository>();
 
 var app = builder.Build();
 

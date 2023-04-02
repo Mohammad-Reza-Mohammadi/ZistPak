@@ -14,6 +14,7 @@ namespace Entities.Cargo
 {
     public class Cargo:IntBaseEntity
     {
+        public string  Name { get; set; }
         public Status status { get; set; }
         public decimal Rating { get; set; }
         public int Count { get; set; }

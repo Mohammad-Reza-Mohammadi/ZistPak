@@ -20,6 +20,7 @@ namespace Data.EntityConfiguration
 
             #region Other Property
             builder.Property(c => c.status).IsRequired();
+            builder.Property(c => c.Name).IsRequired();
             builder.Property(c => c.CreateDate).IsRequired();
             builder.Property(c => c.UpdateDate).IsRequired(false);
             builder.Property(c => c.Rating).IsRequired();

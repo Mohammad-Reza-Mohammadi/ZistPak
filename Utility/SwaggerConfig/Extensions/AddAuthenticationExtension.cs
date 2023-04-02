@@ -15,7 +15,7 @@ namespace Utility.SwaggerConfig
     {
         public static IServiceCollection AddOurAuthentication(this IServiceCollection Services,AppSettings appSettings)
         {
-c
+
             var key = Encoding.ASCII.GetBytes(appSettings.Secret);
             Services.AddAuthentication(options =>
             {
