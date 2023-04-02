@@ -13,7 +13,7 @@ namespace Entities.User.UserProprety.EnumProperty
         ExhibitorEmployee = 2,     // غرفه دار         
         CarEmployee = 3,           // ماشینی
         Customer = 4,              // مشتری
-        //Admin =5                   // مدیر
+        Admin =5                   // مدیر
 
 
     }

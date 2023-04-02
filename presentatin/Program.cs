@@ -1,23 +1,30 @@
-using Data;
+﻿using Data;
 using Data.Contracts;
 using Data.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using Utility.SwaggerConfig;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// گرفتن secret key از appstteing.json
+var AppSettingSections = builder.Configuration.GetSection("AppSettings");
+builder.Services.Configure<Utility.SwaggerConfig.AppSettings>(AppSettingSections);
+var secret = AppSettingSections.Get<AppSettings>();
 
 // Add services to the container.
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOurAuthentication(secret);
+builder.Services.AddOurSwagger();
 
 builder.Services.AddDbContext<ZPakContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("ZPakServer")));
 
-builder.Services.AddScoped(typeof(IRepository<>),typeof(Repository<>));
+builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddTransient<IUserRepository, UserRepository>();
-
 
 var app = builder.Build();
 
@@ -29,6 +36,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

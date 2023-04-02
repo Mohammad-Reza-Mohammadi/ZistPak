@@ -25,10 +25,11 @@ namespace Data.Repositories
             Entities = DbContext.Set<TEntity>();//City => Cities  ||  Get Dbset<TEntity>
         }
 
-
-        #region Async Method
         //cancellationToken(async Method) کاربرد این مورد در زمانی است که وقتی میخواهیم که یک عملی راانجام دهیم که زمان بر است و 
         //ممکن است که در زمان اجرا برنامه ارتباط قطع بشود این متغیر عملیات ایسینکی که درحال اجرا است و ممکن زمان بر باشد را متوقف میکند
+
+        #region Async Method
+
         public virtual async Task<TEntity> GetByIdAsync(CancellationToken cancellationToken, params object[] ids)
         {
             return await Entities.FindAsync(ids, cancellationToken);

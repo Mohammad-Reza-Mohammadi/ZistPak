@@ -2,6 +2,7 @@
 using ECommerce.Utility;
 using Entities.User.Owned;
 using Entities.Useres;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using System.Drawing;
 
 namespace presentation.Controllers
 {
+    [Authorize]
     [Route("api/[controller]/[action]")]
     [ApiController]
     public class UserController : ControllerBase
@@ -30,6 +32,7 @@ namespace presentation.Controllers
             return Ok(users);
         }
 
+        [Authorize(Roles ="Admin")]
         [HttpGet("{id:int}")]
         public async Task<ActionResult<User>> GetUserById(int id, CancellationToken cancellationToken)
         {
@@ -39,6 +42,7 @@ namespace presentation.Controllers
             return user;
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult> SuignUp([FromBody] SignupUserDto signupUserDto, CancellationToken cancellationToken)
         {
@@ -62,12 +66,18 @@ namespace presentation.Controllers
                 Role = signupUserDto.Role,
                 CreateDate = DateTime.Today.ToShamsi(),
             };
-
-
             await userRepository.AddAsync(user, signupUserDto.Password, cancellationToken);
 
             return Content($"{signupUserDto.FirstName} : با موفقیت اضافه شد ");
+        }
 
+        [HttpPost]
+        public async Task<ActionResult<User>> Login(string FirstName, string password, CancellationToken cancellationToken)
+        {
+            var user = await userRepository.Login(FirstName, password, cancellationToken);
+            if (user == null)
+                return Content($"{FirstName} یافت نشد");
+            return user;
         }
 
         // نیاز به احراز هویت
