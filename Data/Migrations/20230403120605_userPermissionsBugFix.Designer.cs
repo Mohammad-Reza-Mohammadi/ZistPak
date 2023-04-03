@@ -4,6 +4,7 @@ using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ZPakContext))]
-    partial class ZPakContextModelSnapshot : ModelSnapshot
+    [Migration("20230403120605_userPermissionsBugFix")]
+    partial class userPermissionsBugFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,33 +193,6 @@ namespace Data.Migrations
                     b.ToTable("OrderDetail");
                 });
 
-            modelBuilder.Entity("Entities.Useres.UPermissions", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Permission")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("municiaplityId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("userId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("municiaplityId");
-
-                    b.HasIndex("userId");
-
-                    b.ToTable("UPermissions");
-                });
-
             modelBuilder.Entity("Entities.Useres.User", b =>
                 {
                     b.Property<int>("Id")
@@ -307,25 +282,6 @@ namespace Data.Migrations
                     b.Navigation("cargo");
                 });
 
-            modelBuilder.Entity("Entities.Useres.UPermissions", b =>
-                {
-                    b.HasOne("Entities.Municipality.Municipality", "municipality")
-                        .WithMany("UPermissions")
-                        .HasForeignKey("municiaplityId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Useres.User", "user")
-                        .WithMany("permissions")
-                        .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("municipality");
-
-                    b.Navigation("user");
-                });
-
             modelBuilder.Entity("Entities.Useres.User", b =>
                 {
                     b.HasOne("Entities.Useres.User", "ParentEmployee")
@@ -376,6 +332,30 @@ namespace Data.Migrations
                                 .HasForeignKey("OwnerId");
                         });
 
+                    b.OwnsMany("Entities.Useres.UserProprety.OwnedProperty.UserPermissions", "permissions", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int");
+
+                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"), 1L, 1);
+
+                            b1.Property<int>("OwnerId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("Permission")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("OwnerId");
+
+                            b1.ToTable("UserPermissions");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OwnerId");
+                        });
+
                     b.OwnsOne("Entities.User.Owned.FullName", "FullName", b1 =>
                         {
                             b1.Property<int>("UserId")
@@ -404,6 +384,8 @@ namespace Data.Migrations
                     b.Navigation("ParentEmployee");
 
                     b.Navigation("municipality");
+
+                    b.Navigation("permissions");
                 });
 
             modelBuilder.Entity("Entities.Cargo.Cargo", b =>
@@ -415,8 +397,6 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Entities.Municipality.Municipality", b =>
                 {
-                    b.Navigation("UPermissions");
-
                     b.Navigation("users");
                 });
 
@@ -428,8 +408,6 @@ namespace Data.Migrations
             modelBuilder.Entity("Entities.Useres.User", b =>
                 {
                     b.Navigation("ChileEmployee");
-
-                    b.Navigation("permissions");
                 });
 #pragma warning restore 612, 618
         }

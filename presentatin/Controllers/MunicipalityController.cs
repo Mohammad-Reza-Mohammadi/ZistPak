@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using presentation.Models;
 using presentation.Models.Municipality;
+using System.Transactions;
+using Utility.SwaggerConfig.Permissions;
 
 namespace presentation.Controllers
 {
@@ -47,9 +49,27 @@ namespace presentation.Controllers
             return municipality;
         }
 
+        [PermissionAuthorize(Permissions.Municipality.AddCantractorPermissionById)]
+        [HttpPost]
+        public async Task<ActionResult> AddSoperviserPermissionById(int Id, CancellationToken cancellationToken)
+        {
+            
+           var Result =await municipalityRepository.ChangePermissinByID(Id, cancellationToken);
 
-        //تغییر دسترسی کاربر
+            if (Result == false)
+            {
+                return Content("شما قادر به تغییر مجوز های کاربر وارد شده نمی باشید");
+            }
+            return Content("مجوز با موفقیت اضافه شد");
 
+        }
 
+        [PermissionAuthorize(Permissions.Municipality.AddAllCantractorPermission)]
+        [HttpPost]
+        public async Task<ActionResult> AddAllSoperviserPermission( CancellationToken cancellationToken)
+        {
+            await municipalityRepository.AllSupervisorChangePermissin(cancellationToken);
+            return Content("عملیات با موفقیت انجام شد");
+        }
     }
 }

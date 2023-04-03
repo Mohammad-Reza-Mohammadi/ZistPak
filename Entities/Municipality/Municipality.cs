@@ -19,6 +19,7 @@ namespace Entities.Municipality
 
         #region Navigation Property
         public ICollection<Useres.User> users { get; set; }
+        public ICollection<UPermissions> UPermissions { get; set; }
         #endregion
     }
 }

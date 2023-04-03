@@ -4,6 +4,7 @@ using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ZPakContext))]
-    partial class ZPakContextModelSnapshot : ModelSnapshot
+    [Migration("20230403104541_bugFixUserPermissions")]
+    partial class bugFixUserPermissions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,33 +193,6 @@ namespace Data.Migrations
                     b.ToTable("OrderDetail");
                 });
 
-            modelBuilder.Entity("Entities.Useres.UPermissions", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Permission")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("municiaplityId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("userId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("municiaplityId");
-
-                    b.HasIndex("userId");
-
-                    b.ToTable("UPermissions");
-                });
-
             modelBuilder.Entity("Entities.Useres.User", b =>
                 {
                     b.Property<int>("Id")
@@ -268,6 +243,10 @@ namespace Data.Migrations
                     b.Property<int?>("municipalityId")
                         .HasColumnType("int");
 
+                    b.Property<string>("permissions")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ParetnEmployeeId");
@@ -305,25 +284,6 @@ namespace Data.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("cargo");
-                });
-
-            modelBuilder.Entity("Entities.Useres.UPermissions", b =>
-                {
-                    b.HasOne("Entities.Municipality.Municipality", "municipality")
-                        .WithMany("UPermissions")
-                        .HasForeignKey("municiaplityId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Useres.User", "user")
-                        .WithMany("permissions")
-                        .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("municipality");
-
-                    b.Navigation("user");
                 });
 
             modelBuilder.Entity("Entities.Useres.User", b =>
@@ -415,8 +375,6 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Entities.Municipality.Municipality", b =>
                 {
-                    b.Navigation("UPermissions");
-
                     b.Navigation("users");
                 });
 
@@ -428,8 +386,6 @@ namespace Data.Migrations
             modelBuilder.Entity("Entities.Useres.User", b =>
                 {
                     b.Navigation("ChileEmployee");
-
-                    b.Navigation("permissions");
                 });
 #pragma warning restore 612, 618
         }

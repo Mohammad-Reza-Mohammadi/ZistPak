@@ -33,7 +33,6 @@ namespace Data.EntityConfiguration.UserConfiguration
             builder.Property(c => c.IsActive).IsRequired();
             builder.Property(c => c.Gender).IsRequired();
             builder.Property(c => c.Role).IsRequired();
-            builder.Property(c => c.permissionLevel).IsRequired();
             #endregion
 
             #region Owned Type Property
@@ -43,7 +42,6 @@ namespace Data.EntityConfiguration.UserConfiguration
 
             builder.OwnsMany(c => c.Addresses, c =>
             {
-
                 c.WithOwner().HasForeignKey(c => c.OwnerId);
                 c.HasKey(c => c.Id);
                 c.Property(c => c.AddressTitle).IsRequired();
@@ -53,6 +51,7 @@ namespace Data.EntityConfiguration.UserConfiguration
                 c.Property(c => c.PostalCode).IsRequired(false);
             });
             //builder.Property(c => c.Addresses).IsRequired(false);
+
             #endregion
 
             #region Navigation Property

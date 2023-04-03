@@ -1,4 +1,5 @@
 ﻿using Data.Repositories;
+using Entities.User.UserProprety.EnumProperty;
 using Entities.Useres;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -11,9 +12,10 @@ namespace Data.Contracts
 {
     public interface IUserRepository:IRepository<User>
     {
-        public Task AddAsync(User user, string password, CancellationToken cancellationToken);
+        public Task AddAsync(User user, string password, Role Role, CancellationToken cancellationToken);
         public Task UpdateUserAsync(User user, int UserId, IFormFile formFile, CancellationToken cancellationToken);
         public Task<User> Login(string firstName, string password, CancellationToken cancellationToken);
+
 
 
 

@@ -9,11 +9,12 @@ using presentation.Models.Cargo;
 using Microsoft.EntityFrameworkCore;
 using presentation.Models.ItemDto;
 using Microsoft.AspNetCore.Authorization;
+using Utility.SwaggerConfig.Permissions;
 
 namespace presentation.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class ItemController : ControllerBase
     {
@@ -25,15 +26,25 @@ namespace presentation.Controllers
             itemRepository = _itemRepository;
             cargoRepository = _cargoRepository;
         }
-        [Authorize(Roles = "Admin,Supervisor")]
+
         [HttpGet]
-        public async Task<List<Item>> Get(CancellationToken cancellationToken)
+        public async Task<List<Item>> GetAllItem(CancellationToken cancellationToken)
         {
             var cargos = await itemRepository.TableNoTracking.ToListAsync(cancellationToken);
             return cargos;
         }
 
-        [Authorize(Roles = "Admin,Supervisor")]
+
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<Item>> GetItemById(int id, CancellationToken cancellationToken)
+        {
+            var item = await itemRepository.GetByIdAsync(cancellationToken, id);
+            if (item == null)
+                return NotFound();
+            return item;
+        }
+
+        [PermissionAuthorize(Permissions.Item.AddItem)]
         [HttpPost]
         public async Task<ActionResult> AddItem([FromForm] AddItemDto addItemDto, CancellationToken cancellationToken)
         {
@@ -63,17 +74,8 @@ namespace presentation.Controllers
             return Ok("Items Successfully Added");
         }
 
-        [Authorize(Roles = "Admin,Supervisor")]
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<Item>> GetItemById(int id, CancellationToken cancellationToken)
-        {
-            var item = await itemRepository.GetByIdAsync(cancellationToken, id);
-            if (item == null)
-                return NotFound();
-            return item;
-        }
 
-        [Authorize(Roles = "Admin,Supervisor")]
+        [PermissionAuthorize(Permissions.Item.UpdateItem)]
         [HttpPut]
         public async Task<ActionResult> UpdateItem([FromForm] UpdateItemDto updateItemDto, CancellationToken cancellationToken)
         {
@@ -108,7 +110,7 @@ namespace presentation.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "Admin,Supervisor")]
+        [PermissionAuthorize(Permissions.Item.Delete)]
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken)
         {

@@ -4,6 +4,7 @@ using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ZPakContext))]
-    partial class ZPakContextModelSnapshot : ModelSnapshot
+    [Migration("20230403150558_userPermissionsBugFix1")]
+    partial class userPermissionsBugFix1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -203,15 +205,10 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("municiaplityId")
-                        .HasColumnType("int");
-
                     b.Property<int>("userId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("municiaplityId");
 
                     b.HasIndex("userId");
 
@@ -309,19 +306,11 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Entities.Useres.UPermissions", b =>
                 {
-                    b.HasOne("Entities.Municipality.Municipality", "municipality")
-                        .WithMany("UPermissions")
-                        .HasForeignKey("municiaplityId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Entities.Useres.User", "user")
                         .WithMany("permissions")
                         .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("municipality");
 
                     b.Navigation("user");
                 });
@@ -415,8 +404,6 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Entities.Municipality.Municipality", b =>
                 {
-                    b.Navigation("UPermissions");
-
                     b.Navigation("users");
                 });
 

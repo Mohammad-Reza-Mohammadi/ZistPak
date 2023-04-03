@@ -2,7 +2,6 @@
 using ECommerce.Utility;
 using Entities.User.Owned;
 using Entities.Useres;
-using Entities.Useres.UserProprety.EnumProperty;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 using presentation.Models;
 using System.Drawing;
 using System.Security.Claims;
+using Utility.SwaggerConfig.Permissions;
+using static Utility.SwaggerConfig.Permissions.Permissions;
+using User = Entities.Useres.User;
 
 namespace presentation.Controllers
 {
@@ -26,16 +28,15 @@ namespace presentation.Controllers
         }
 
         // برای دسترسی علاوه بر نقش باید iaActive هم چک بشود
-        [Authorize(Roles = "Admin")]
+        [PermissionAuthorize(Permissions.User.GetAll)]
         [HttpGet]
-        public async Task<ActionResult<List<User>>> Get(CancellationToken cancellationToken)
+        public async Task<ActionResult<List<User>>> GetAll(CancellationToken cancellationToken)
         {
             var users = await userRepository.TableNoTracking.ToListAsync(cancellationToken);
             return Ok(users);
         }
 
-        [Authorize(Roles ="Admin")]
-        //[Authorize(Policy ="GetAllUser")]
+        [PermissionAuthorize(Permissions.User.GetUserById)]
         [HttpGet("{id:int}")]
         public async Task<ActionResult<User>> GetUserById(int id, CancellationToken cancellationToken)
         {
@@ -67,19 +68,17 @@ namespace presentation.Controllers
                 },
                 Gender = signupUserDto.Gender,
                 Role = signupUserDto.Role,
-                permissionLevel = PermissionLevel.level1,
-                CreateDate = DateTime.Today.ToShamsi(),                
             };
             var peId = signupUserDto.ParetnEmployeeId;
             if (peId == null)
             {
-            await userRepository.AddAsync(user, signupUserDto.Password, cancellationToken);
+                await userRepository.AddAsync(user, signupUserDto.Password, signupUserDto.Role, cancellationToken);
             }
             else
             {
                 user.ParetnEmployeeId = signupUserDto.ParetnEmployeeId.Value;
+                await userRepository.AddAsync(user, signupUserDto.Password, signupUserDto.Role, cancellationToken);
             }
-            await userRepository.AddAsync(user, signupUserDto.Password, cancellationToken);
 
 
             return Content($"{signupUserDto.FirstName} : با موفقیت اضافه شد ");
@@ -95,12 +94,12 @@ namespace presentation.Controllers
             return user;
         }
 
-        [Authorize(Roles = "Admin")]
+        [AllowAnonymous]
         [HttpPut]
         public async Task<ActionResult> Update([FromForm] UpdateUserDto user, CancellationToken cancellationToken)
         {
             var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            int userId1 =Convert.ToInt32(userId);
+            int userId1 = Convert.ToInt32(userId);
             var GetUser = await userRepository.GetByIdAsync(cancellationToken, userId1);
 
             #region update user
@@ -125,15 +124,19 @@ namespace presentation.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "Admin")]
+        [PermissionAuthorize(Permissions.User.Delete)]
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             var user = await userRepository.GetByIdAsync(cancellationToken, id);
             user.IsActive = false;
-            await userRepository.UpdateAsync(user,cancellationToken);
+            await userRepository.UpdateAsync(user, cancellationToken);
 
             return Ok();
         }
+
+
+
+
     }
 }

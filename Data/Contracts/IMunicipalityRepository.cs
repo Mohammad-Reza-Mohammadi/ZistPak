@@ -13,6 +13,9 @@ namespace Data.Contracts
     {
         public Task AddAsync(Municipality municipality, string password, CancellationToken cancellationToken);
         public Task<Municipality> LoginAsync(string name, string password, CancellationToken cancellationToken);
+        public Task<bool> ChangePermissinByID(int id, CancellationToken cancellationToken);
+        public Task AllSupervisorChangePermissin(CancellationToken cancellationToken);
+
 
 
     }

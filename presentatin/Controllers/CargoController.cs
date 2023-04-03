@@ -12,11 +12,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using presentation.Models.Cargo;
 using System.Security.Cryptography.Xml;
+using Utility.SwaggerConfig.Permissions;
 
 namespace presentation.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class CargoController : ControllerBase
     {
@@ -28,15 +29,24 @@ namespace presentation.Controllers
         }
 
 
-        [Authorize(Roles = "Admin,Supervisor")]
+
         [HttpGet]
-        public async Task<List<Cargo>> Get(CancellationToken cancellationToken)
+        public async Task<List<Cargo>> GetAllCargo(CancellationToken cancellationToken)
         {
             var cargos = await cargoRepository.TableNoTracking.ToListAsync(cancellationToken);
             return cargos;
         }
 
-        [Authorize(Roles = "Admin,Supervisor")]
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<Cargo>> GetCargoById(int id, CancellationToken cancellationToken)
+        {
+            var cargo = await cargoRepository.GetByIdAsync(cancellationToken, id);
+            if (cargo == null)
+                return NotFound();
+            return cargo;
+        }
+
+        [PermissionAuthorize(Permissions.Cargo.AddCargo)]
         [HttpPost]
         public async Task<ActionResult> AddCargo(CargoDto cargoDto, CancellationToken cancellationToken)
         {
@@ -88,18 +98,9 @@ namespace presentation.Controllers
             #endregion
         }
 
-        [Authorize(Roles = "Admin,Supervisor")]
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<Cargo>> GetCargoById(int id, CancellationToken cancellationToken)
-        {
-            var cargo = await cargoRepository.GetByIdAsync(cancellationToken, id);
-            if (cargo == null)
-                return NotFound();
-            return cargo;
-        }
-        [Authorize(Roles = "Admin,Supervisor")]
+        [PermissionAuthorize(Permissions.Cargo.UpdateCargo)]
         [HttpPut]
-        public async Task<ActionResult> Update(UpdateCargoDto updateCargoDto, CancellationToken cancellationToken)
+        public async Task<ActionResult> UpdateCargo(UpdateCargoDto updateCargoDto, CancellationToken cancellationToken)
         {
             int cargoId = updateCargoDto.cargoId;
 
@@ -118,9 +119,10 @@ namespace presentation.Controllers
 
             return Ok();
         }
-        [Authorize(Roles = "Admin,Supervisor")]
+
+        [PermissionAuthorize(Permissions.Cargo.DeleteCargo)]
         [HttpDelete("{id:int}")]
-        public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken)
+        public async Task<ActionResult> DeleteCargo(int id, CancellationToken cancellationToken)
         {
             var cargo = await cargoRepository.GetByIdAsync(cancellationToken, id);
             cargo.status = Status.Rejected;

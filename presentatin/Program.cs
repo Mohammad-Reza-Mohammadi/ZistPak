@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Utility.SwaggerConfig;
-//using Utility.SwaggerConfig.Permissions;
+using Utility.SwaggerConfig.Permissions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +30,9 @@ builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<ICargoRepository , CargoRepository>();
 builder.Services.AddTransient<IItemRepository, ItemRepository>();
 builder.Services.AddTransient<IMunicipalityRepository, MunicipalityRepository>();
-//builder.Services.AddSingleton<IAuthorizationPolicyProvider, AuthorizationPolicyProvider>();
+builder.Services.AddTransient<IBasketRepository, BasketRepository>();
+
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, AuthorizationPolicyProvider>();
 
 
 var app = builder.Build();
