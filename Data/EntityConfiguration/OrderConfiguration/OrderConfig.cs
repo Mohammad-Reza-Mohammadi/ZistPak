@@ -20,7 +20,7 @@ namespace Data.EntityConfiguration.OrderConfiguration
             builder.Property(c => c.CreateDate).IsRequired();
             builder.Property(c => c.UpdateDate).IsRequired(false);
             builder.Property(c => c.userId).IsRequired();
-            builder.Property(c => c.sumCrgo).IsRequired();
+            builder.Property(c => c.RatingOreder).IsRequired();
             builder.Property(c => c.IsFinaly).IsRequired();
 
             #endregion

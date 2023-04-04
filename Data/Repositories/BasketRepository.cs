@@ -2,6 +2,7 @@
 using ECommerce.Utility;
 using Entities.Cargo;
 using Entities.Orders;
+using Entities.Useres;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -20,7 +21,7 @@ namespace Data.Repositories
         {
         }
 
-        public async Task<bool> AddToCart(int CurrentUserId, int Id, CancellationToken cancellationToken)
+        public async Task<bool> AddToBasket(int CurrentUserId, int Id, CancellationToken cancellationToken)
         {
             //bool status = false;
             Order order = DbContext.Set<Order>().SingleOrDefault(o => o.userId == CurrentUserId && !o.IsFinaly);
@@ -31,12 +32,12 @@ namespace Data.Repositories
                 order.userId = CurrentUserId;
                 order.CreateDate = DateTime.Now.ToString();
                 order.IsFinaly = false;
-                order.sumCrgo = 0;
+                order.RatingOreder = 0;
                 await DbContext.Set<Order>().AddAsync(order);
                 await DbContext.SaveChangesAsync();
 
-                var p = await DbContext.Set<Cargo>().SingleOrDefaultAsync(p => p.Id == Id);
-                int Rating = Convert.ToInt32(p.Rating);
+                var caro = await DbContext.Set<Cargo>().SingleOrDefaultAsync(p => p.Id == Id);
+                int Rating = Convert.ToInt32(caro.Rating);
 
                 await DbContext.Set<OrderDetail>().AddAsync(new OrderDetail()
                 {
@@ -55,16 +56,18 @@ namespace Data.Repositories
                 var details = await DbContext.Set<OrderDetail>().SingleOrDefaultAsync(o => o.OrderId == order.Id && o.cargoId == Id);
                 if (details == null)
                 {
-                    var p = await DbContext.Set<Cargo>().SingleOrDefaultAsync(p => p.Id == Id);
-                    int Rating = Convert.ToInt32(p.Rating);
+                    var cargo = await DbContext.Set<Cargo>().SingleOrDefaultAsync(p => p.Id == Id);
+
+                    int Rating = Convert.ToInt32(cargo.Rating);
 
                     await DbContext.Set<OrderDetail>().AddAsync(new OrderDetail()
                     {
+                        CreateDate = DateTime.Now.ToShamsi(),
                         CountCargo = 1,
                         OrderId = order.Id,
                         rating = Rating,
                         cargoId = Id,
-                    });
+                    }) ;
                 }
                 else
                 {
@@ -84,7 +87,7 @@ namespace Data.Repositories
             var rating = await DbContext.Set<OrderDetail>().Where(o => o.OrderId == orderId).Select(d => d.rating).FirstOrDefaultAsync();
 
             var sum = count * rating;
-            order.sumCrgo = sum;
+            order.RatingOreder = sum;
             DbContext.Update(order);
             await DbContext.SaveChangesAsync();
 

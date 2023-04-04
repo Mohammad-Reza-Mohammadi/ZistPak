@@ -10,7 +10,7 @@ namespace Data.Contracts
 {
     public interface IBasketRepository:IRepository<Order>
     {
-        Task<bool> AddToCart(int CurrentUserId, int Id, CancellationToken cancellationToken);
+        Task<bool> AddToBasket(int CurrentUserId, int Id, CancellationToken cancellationToken);
         Task<List<OrderDetail>> GetOrderDetails(int OrderDetailsId ,CancellationToken cancellationToken);
         public Task<bool> DeleteFromOrder(int OrderDeratilsId, CancellationToken cancellationToken);
     }

@@ -35,7 +35,14 @@ namespace Utility.SwaggerConfig.Permissions
             public const string AddCantractorPermissionById = "Permissions.Municipality.AddAllSoperviserPermission";
             public const string AddAllCantractorPermission = "Permissions.Municipality.AddSoperviserPermissionById";
 
+        }
 
+        public static class Basket
+        {
+            public const string AddToCart = "Permissions.Basket.AddToCart";
+            public const string ShowOrder = "Permissions.Basket.ShowOrder";
+            public const string DeleteFromCart = "Permissions.Basket.DeleteFromCart";
+            //public const string  = "Permissions.Basket.";
         }
 
         // میتوان که برای چندین کنترلر یک مجوز ساخت که نیاز نباشد به کاربر برای هر کنترلر یک مجوز بدهیم

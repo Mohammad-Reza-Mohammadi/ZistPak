@@ -38,17 +38,15 @@ namespace Data.Repositories
             var passswordHash = SecurityHelper.GetSha256Hash(password);
             municipality.Hashpassword = passswordHash;
 
-            municipality.UPermissions = new List<UPermissions>
+            municipality.municipalityPermissions = new List<MunicipalityPermissions>
             {
-                new UPermissions()
+                new MunicipalityPermissions()
                 {
                     Permission = "Permissions.Municipality.AddSoperviserPermissionById",
-                    userId = 7,
                 },
-                new UPermissions()
+                new MunicipalityPermissions()
                 {
-                    Permission = "Permissions.Municipality.AddAllSoperviserPermission",
-                    userId = 7,
+                    Permission = "Permissions.Municipality.AddAllSoperviserPermission",  
                 },
             };
 
@@ -67,7 +65,7 @@ namespace Data.Repositories
 
             var muniId = municipality.Id;
 
-            var ListPermissions = await DbContext.Set<UPermissions>().Where(u => u.municiaplityId == muniId).ToListAsync();
+            var ListPermissions = await DbContext.Set<MunicipalityPermissions>().Where(u => u.municiaplityId == muniId).ToListAsync();
 
             // authenticaiton successfo so generate jwt token
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -76,8 +74,9 @@ namespace Data.Repositories
             foreach (var permisson in ListPermissions)
             {
                 claims.AddClaims(new[]{
-                new Claim(Permissions.Permission,permisson.Permission.ToString())
-                });
+                new Claim(Permissions.Permission,permisson.Permission.ToString()),
+                new Claim(ClaimTypes.NameIdentifier,municipality.Id.ToString())
+                }) ;
 
             }
             #region Claim or Policy
@@ -96,7 +95,7 @@ namespace Data.Repositories
             municipality.token = tokenHandler.WriteToken(token);
 
             //The password will not be returned
-            municipality.UPermissions = null;
+            municipality.municipalityPermissions = null;
             municipality.Hashpassword = null;
             return municipality;
 
@@ -111,7 +110,7 @@ namespace Data.Repositories
             {
                 return false;
             }
-            List<UPermissions> AddPermission = new List<UPermissions>
+            User.permissions = new List<UPermissions>
             {
                 new UPermissions()
                 {
@@ -130,7 +129,10 @@ namespace Data.Repositories
                 },
 
             };
-            await DbContext.Set<UPermissions>().AddRangeAsync(AddPermission, cancellationToken);
+
+            var p = User.permissions;
+            await DbContext.Set<UPermissions>().AddRangeAsync(p,cancellationToken);
+            await DbContext.SaveChangesAsync();
             return true;
         }
 
@@ -161,6 +163,7 @@ namespace Data.Repositories
                 };
 
                 await DbContext.Set<UPermissions>().AddRangeAsync(AddPermission, cancellationToken);
+                await DbContext.SaveChangesAsync();
             }
 
         }

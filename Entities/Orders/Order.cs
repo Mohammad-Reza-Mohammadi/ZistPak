@@ -11,7 +11,7 @@ namespace Entities.Orders
     public class Order:IntBaseEntity
     {
         public int userId { get; set; }
-        public int sumCrgo { get; set; }
+        public int RatingOreder { get; set; }//قیمت کل سبد خرید
         public bool IsFinaly { get; set; }
         public ICollection<OrderDetail> orderDetails { get; set; }
 

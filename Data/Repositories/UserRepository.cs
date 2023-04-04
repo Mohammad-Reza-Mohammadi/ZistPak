@@ -63,11 +63,12 @@ namespace Data.Repositories
                             //}
                             #endregion
                         };
-                        var peId = user.ParetnEmployeeId;
-                        if (peId != null)
+                        var paId = user.ParetnEmployeeId;
+                        if (paId != null)
                         {
-                            user.ParetnEmployeeId = user1.ParetnEmployeeId.Value;
+                            user1.ParetnEmployeeId = paId;
                         }
+                        var u = user1;
                         await base.AddAsync(user1, cancellationToken);
                         break;
                     }
@@ -96,7 +97,7 @@ namespace Data.Repositories
                         var peId = user.ParetnEmployeeId;
                         if (peId != null)
                         {
-                            user.ParetnEmployeeId = user1.ParetnEmployeeId.Value;
+                            user1.ParetnEmployeeId = peId;
                         }
                         await base.AddAsync(user1, cancellationToken);
                         break;
@@ -117,20 +118,18 @@ namespace Data.Repositories
                                 new UPermissions()
                                 {
                                     Permission = "Permissions.Item.AddItem",
-                                    municiaplityId =4,
 
                                 },
                                 new UPermissions()
                                 {
                                     Permission = "Permissions.Item.UpdateItem",
-                                    municiaplityId =4,
                                 }
                             }
                         };
                         var peId = user.ParetnEmployeeId;
                         if (peId != null)
                         {
-                            user.ParetnEmployeeId = user1.ParetnEmployeeId.Value;
+                            user1.ParetnEmployeeId = peId;
                         }
                         await base.AddAsync(user1, cancellationToken);
                         break;
@@ -151,7 +150,6 @@ namespace Data.Repositories
                             {
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.Item.AddItem"
                                 }
                             }
@@ -159,7 +157,7 @@ namespace Data.Repositories
                         var peId = user.ParetnEmployeeId;
                         if (peId != null)
                         {
-                            user.ParetnEmployeeId = user1.ParetnEmployeeId.Value;
+                            user1.ParetnEmployeeId = peId;
                         }
                         await base.AddAsync(user1, cancellationToken);
                         break;
@@ -175,13 +173,21 @@ namespace Data.Repositories
                             Addresses = user.Addresses,
                             Gender = user.Gender,
                             Role = user.Role,
-                            //permissions = new List<UserPermissions>
-                            //{
-                            //    new UserPermissions()
-                            //    {
-                            //        Permission = "Permissions.Item.AddItem"
-                            //    },
-                            //}
+                            permissions = new List<UPermissions>
+                            {
+                                new UPermissions()
+                                {
+                                    Permission = "Permissions.Basket.AddToCart"
+                                },
+                                new UPermissions()
+                                {
+                                    Permission = "Permissions.Basket.DeleteFromCart"
+                                },
+                                new UPermissions()
+                                {
+                                    Permission = "Permissions.Basket.ShowOrder"
+                                },
+                            }
                         };
                         var peId = user.ParetnEmployeeId;
                         if (peId != null)
@@ -206,59 +212,60 @@ namespace Data.Repositories
                             {
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.User.GetAll"
                                 },
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.User.Delete"
                                 },
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.User.GetUserById"
                                 },
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.Item.AddItem"
                                 },
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.Item.UpdateItem"
                                 },
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.Item.Delete"
                                 },
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.Cargo.AddCargo"
                                 },
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.Cargo.UpdateCargo"
                                 },
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.Cargo.DeleteCargo"
                                 }, 
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.Municipality.AddSoperviserPermissionById"
                                 },
                                 new UPermissions()
                                 {
-                                    municiaplityId =4,
                                     Permission = "Permissions.Municipality.AddAllSoperviserPermission"
-                                },      
+                                },
+                                new UPermissions()
+                                {
+                                    Permission = "Permissions.Basket.AddToCart"
+                                },
+                                new UPermissions()
+                                {
+                                    Permission = "Permissions.Basket.DeleteFromCart"
+                                },
+                                new UPermissions()
+                                {
+                                    Permission = "Permissions.Basket.ShowOrder"
+                                },
                             }
                         };
                         var peId = user.ParetnEmployeeId;

@@ -8,11 +8,12 @@ using presentation.Models;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Threading.Tasks.Dataflow;
+using Utility.SwaggerConfig.Permissions;
 
 namespace presentation.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class BasketController : ControllerBase
     {
@@ -25,21 +26,23 @@ namespace presentation.Controllers
             this.cargoRepository = cargoRepository;
         }
 
+        [PermissionAuthorize(Permissions.Basket.AddToCart)]
         [HttpPost]
-        //post : api/Cart/AddToCart{id}
         public async Task<ActionResult> AddToCart(int CargoId,CancellationToken cancellationToken)
         {
             string CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             int currentUserId = Convert.ToInt32(CurrentUserId);
 
 
-            bool task = await basketRepository.AddToCart(currentUserId, CargoId,cancellationToken);
+            bool task = await basketRepository.AddToBasket(currentUserId, CargoId,cancellationToken);
             if (task == false)
             {
                 return Content("مشکلی رخ داده");
             }
             return Ok();
         }
+
+        [PermissionAuthorize(Permissions.Basket.ShowOrder)]
 
         [HttpGet]
         public async Task<List<ShowListOrderDto>> ShowOrder(CancellationToken cancellationToken)
@@ -73,8 +76,8 @@ namespace presentation.Controllers
             return OrderList;
         }
 
+        [PermissionAuthorize(Permissions.Basket.DeleteFromCart)]
         [HttpDelete]
-        //Delete : api/Cart/DeleteFromCart
         public async Task<ActionResult> DeleteFromCart(int OrderDetailId,CancellationToken cancellationToken)
         {
             var ResultDelete = await basketRepository.DeleteFromOrder(OrderDetailId, cancellationToken);

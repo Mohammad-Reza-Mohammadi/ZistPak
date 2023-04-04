@@ -1,4 +1,4 @@
-﻿using Entities.Useres;
+﻿using Entities.Municipality;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -7,24 +7,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Data.EntityConfiguration.UserConfiguration
+namespace Data.EntityConfiguration.MunicipalityConfigration
 {
-    public class UserPermissions : IEntityTypeConfiguration<UPermissions>
+    public class MunicipalityPermissionConfig : IEntityTypeConfiguration<MunicipalityPermissions>
     {
-        public void Configure(EntityTypeBuilder<UPermissions> builder)
+        public void Configure(EntityTypeBuilder<MunicipalityPermissions> builder)
         {
-            //key
             builder.HasKey(x => x.Id);
 
             builder.Property(c => c.Permission).IsRequired();
 
             #region navigtion Property
-            builder.HasOne(c=>c.user)
-                .WithMany(c=>c.permissions)
-                .HasForeignKey(c => c.userId)
+            builder.HasOne(c => c.municipality)
+                .WithMany(c => c.municipalityPermissions)
+                .HasForeignKey(c => c.municiaplityId)
                 .OnDelete(DeleteBehavior.Restrict);
             #endregion
         }
-
     }
 }
