@@ -1,5 +1,6 @@
 ﻿using Entities.BaseEntityFolder;
-using Entities.Municipality;
+//using Entities.Municipality;
+//using Entities.Municipality.Enum;
 using Entities.User.Enum;
 using Entities.User.Owned;
 using Entities.User.UserProprety.EnumProperty;
@@ -16,36 +17,37 @@ namespace Entities.Useres
     {
         public User()
         {   
-            IsActive = true;
+            UserIsActive = true;
         }
-        public string HashPassword { get; set; }
-        public int? Age { get; set; }
-        public string PhoneNumber { get; set; }
-        public string Email { get; set; }
-        public string Image { get; set; }
-        public string Token { get; set; }
-        public bool IsActive { get; set; }
+        public string UserName { get; set; }
+        public string UserPasswordHash { get; set; }
+        public int UserAge { get; set; }
+        public string UserPhoneNumber { get; set; }
+        public string UserEmail { get; set; }
+        public string UserImage { get; set; }
+        public decimal UserStar { get; set; } = 0;
+        public string UserToken { get; set; }
+        public bool UserIsActive { get; set; }
+
+
 
         #region Enum Property
-        public Gender Gender { get; set; }
-        public Role Role { get; set; }
+        public UserGender UserGender { get; set; }
+        public UserRole UserRole { get; set; }
         #endregion
 
         #region OwnedType Property
-        public FullName FullName { get; set; }
-        public ICollection<Address> Addresses { get; set; }
+        public FullName UserFullName { get; set; }
+        public virtual ICollection<Address> UserAddresses { get; set; }
         #endregion
 
         #region Navigation Property
-        //Municipality
-        public int? municipalityId { get; set; }
-        public Municipality.Municipality municipality { get; set; }
-
-        public ICollection<UPermissions> permissions { get; set; }
-
-        public int? ParetnEmployeeId { get; set; }
-        public User ParentEmployee { get; set; }
-        public ICollection<User> ChileEmployee { get; set; }
+        //Permission
+        public virtual ICollection<UPermissions> UserPermissions { get; set; }
+        //Employee
+        public int? UserParetnEmployeeId { get; set; }
+        public User UserParentEmployee { get; set; }
+        public virtual ICollection<User> UserChiledEmployee { get; set; }
         #endregion
     }
 }

@@ -13,6 +13,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using presentation.Models.Cargo;
 using System.Security.Cryptography.Xml;
 using Utility.SwaggerConfig.Permissions;
+using static Utility.SwaggerConfig.Permissions.Permissions;
+using Cargo = Entities.Cargo.Cargo;
 
 namespace presentation.Controllers
 {
@@ -21,48 +23,49 @@ namespace presentation.Controllers
     [ApiController]
     public class CargoController : ControllerBase
     {
-        private readonly ICargoRepository cargoRepository;
+        private readonly ICargoRepository _cargoRepository;
 
-        public CargoController(ICargoRepository _cargoRepository)
+        public CargoController(ICargoRepository cargoRepository)
         {
-            this.cargoRepository = _cargoRepository;
+            this._cargoRepository = cargoRepository;
         }
 
 
-
+        [AllowAnonymous]
         [HttpGet]
-        public async Task<List<Cargo>> GetAllCargo(CancellationToken cancellationToken)
+        public async Task<ActionResult<List<Cargo>>> GetAllCargo(CancellationToken cancellationToken)
         {
-            var cargos = await cargoRepository.TableNoTracking.ToListAsync(cancellationToken);
+            List<Cargo> cargos = await _cargoRepository.TableNoTracking.ToListAsync(cancellationToken);
+            if (cargos == null)
+                return Content("محموله ای یافت نشد");
             return cargos;
         }
 
+        [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Cargo>> GetCargoById(int id, CancellationToken cancellationToken)
         {
-            var cargo = await cargoRepository.GetByIdAsync(cancellationToken, id);
+            Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, id);
             if (cargo == null)
-                return NotFound();
+                return Content("محموله یافت نشد");
             return cargo;
         }
 
-        [PermissionAuthorize(Permissions.Cargo.AddCargo)]
+        [PermissionAuthorize(Permissions.Cargo.AddCargo, Admin.admin)]
         [HttpPost]
         public async Task<ActionResult> AddCargo(CargoDto cargoDto, CancellationToken cancellationToken)
         {
 
             Cargo cargo = new Cargo()
             {
-                Name = cargoDto.Name,
-                status = 0,
-                Whight = 0,
-                Rating = 0,
-                Count = 0,
+                CargoName = cargoDto.Name,
+                CargoStatus = 0,
+                CargoWhight = 0,
+                CargoStar = 0,
+                ItemCount = 0,
             };
-            await cargoRepository.AddCargoAsync(cargo, cancellationToken);
-
-
-            return Content($"{cargo.Name} با موفقیت اضافه شد");
+            await _cargoRepository.AddCargoAsync(cargo, cancellationToken);
+            return Content($"{cargoDto.Name} با موفقیت اضافه شد");
             #region Fk bug
             //int cargoId = itemDtos.First().CargoId;
 
@@ -98,35 +101,35 @@ namespace presentation.Controllers
             #endregion
         }
 
-        [PermissionAuthorize(Permissions.Cargo.UpdateCargo)]
+        [PermissionAuthorize(Permissions.Cargo.UpdateCargo, Admin.admin)]
         [HttpPut]
         public async Task<ActionResult> UpdateCargo(UpdateCargoDto updateCargoDto, CancellationToken cancellationToken)
         {
             int cargoId = updateCargoDto.cargoId;
 
-            Cargo cargo = await cargoRepository.GetByIdAsync(cancellationToken, cargoId);
+            Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, cargoId);
             if (cargo == null)
             {
                 return NotFound();
             }
 
             cargo.UpdateDate = DateTime.Now.ToShamsi();
-            cargo.Name = updateCargoDto.Name;
-            cargo.status = updateCargoDto.status;
-            //تغییرات وزن و تعداد آیتم ها با آپدیت کردن آیتم های محموله انجام میشود
+            cargo.CargoName = updateCargoDto.Name;
+            cargo.CargoStatus = updateCargoDto.status;
+            //تغییرات وزن و تعداد آیتم ها و امتیازم محموله با آپدیت کردن آیتم های محموله انجام میشود
 
-            await cargoRepository.UpdateAsync(cargo, cancellationToken);
+            await _cargoRepository.UpdateAsync(cargo, cancellationToken);
 
-            return Ok();
+            return Content("محموله با موفقیت به روز رسانی شد");
         }
 
-        [PermissionAuthorize(Permissions.Cargo.DeleteCargo)]
+        [PermissionAuthorize(Permissions.Cargo.DeleteCargo, Admin.admin)]
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> DeleteCargo(int id, CancellationToken cancellationToken)
         {
-            var cargo = await cargoRepository.GetByIdAsync(cancellationToken, id);
-            cargo.status = Status.Rejected;
-            await cargoRepository.UpdateAsync(cargo, cancellationToken);
+            Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, id);
+            cargo.CargoStatus = Status.Rejected;
+            await _cargoRepository.UpdateAsync(cargo, cancellationToken);
 
             return Ok();
         }

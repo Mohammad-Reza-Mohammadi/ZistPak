@@ -15,7 +15,7 @@ namespace Data.EntityConfiguration.UserConfiguration
         public void Configure(EntityTypeBuilder<User> builder)
         {
 
-            #region Base Property
+            #region Inheritence Property
             builder.HasKey(c => c.Id);
 
             builder.Property(c => c.Id).IsRequired();
@@ -24,48 +24,44 @@ namespace Data.EntityConfiguration.UserConfiguration
             #endregion
 
             #region Other Property
-            builder.Property(c => c.HashPassword).IsRequired();
-            builder.Property(c => c.Age).IsRequired();
-            builder.Property(c => c.PhoneNumber).IsRequired(false);
-            builder.Property(c => c.Email).IsRequired(false);
-            builder.Property(c => c.Image).IsRequired(false);
-            builder.Property(c => c.Token).IsRequired(false);
-            builder.Property(c => c.IsActive).IsRequired();
-            builder.Property(c => c.Gender).IsRequired();
-            builder.Property(c => c.Role).IsRequired();
+            builder.Property(c => c.UserPasswordHash).IsRequired();
+            builder.Property(c => c.UserName).IsRequired();
+            builder.Property(c => c.UserAge).IsRequired();
+            builder.Property(c => c.UserPhoneNumber).IsRequired(false);
+            builder.Property(c => c.UserEmail).IsRequired(false);
+            builder.Property(c => c.UserImage).IsRequired(false);
+            builder.Property(c => c.UserStar).IsRequired();
+            builder.Property(c => c.UserToken).IsRequired(false);
+            builder.Property(c => c.UserIsActive).IsRequired();
+            builder.Property(c => c.UserGender).IsRequired();
+            builder.Property(c => c.UserRole).IsRequired();
+            
             #endregion
 
             #region Owned Type Property
-            builder.OwnsOne(c => c.FullName);
-            //builder.Property(c => c.FullName.FirstName).IsRequired();
-            //builder.Property(c => c.FullName.LastName).IsRequired(false);
+            builder.OwnsOne(c => c.UserFullName);
 
-            builder.OwnsMany(c => c.Addresses, c =>
+            builder.OwnsMany(c => c.UserAddresses, c =>
             {
-                c.WithOwner().HasForeignKey(c => c.OwnerId);
-                c.HasKey(c => c.Id);
-                c.Property(c => c.AddressTitle).IsRequired();
-                c.Property(c => c.City).IsRequired();
-                c.Property(c => c.Town).IsRequired(false);
-                c.Property(c => c.Street).IsRequired(false);
-                c.Property(c => c.PostalCode).IsRequired(false);
+                c.WithOwner().HasForeignKey(c => c.UserAddressOwnerId);
+                c.HasKey(c => c.UserAddressId);
+                c.Property(c => c.UserAddressTitle).IsRequired();
+                c.Property(c => c.UserAddressCity).IsRequired();
+                c.Property(c => c.UserAddressTown).IsRequired(false);
+                c.Property(c => c.UserAddressStreet).IsRequired(false);
+                c.Property(c => c.UserAddressPostalCode).IsRequired(false);
             });
-            //builder.Property(c => c.Addresses).IsRequired(false);
+
 
             #endregion
 
             #region Navigation Property
-            builder.HasOne(c => c.municipality)
-                .WithMany(c => c.users)
-                .HasForeignKey(c => c.municipalityId)
-                .OnDelete(DeleteBehavior.Restrict);
-            builder.Property(c => c.municipalityId).IsRequired(false);
-            //باحذف کاربر نباید شهرداری حذف شود
 
-            builder.HasOne(c => c.ParentEmployee)
-                .WithMany(c => c.ChileEmployee)
-                .HasForeignKey(c => c.ParetnEmployeeId)
+            builder.HasOne(c => c.UserParentEmployee)
+                .WithMany(c => c.UserChiledEmployee)
+                .HasForeignKey(c => c.UserParetnEmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
+            builder.Property(c=>c.UserParetnEmployeeId).IsRequired(false);
             //با حذف کارمند ها نباید پیمانکار حذف شوند
             #endregion
         }

@@ -1,15 +1,21 @@
 ﻿using Data.Contracts;
+using Data.Repositories;
 using ECommerce.Utility;
 using Entities.User.Owned;
+using Entities.User.UserProprety.EnumProperty;
 using Entities.Useres;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 using presentation.Models;
 using System.Drawing;
+using System.Net.Mime;
 using System.Security.Claims;
 using Utility.SwaggerConfig.Permissions;
+using WebFramework.Api;
+using WebFramework.Filters;
 using static Utility.SwaggerConfig.Permissions.Permissions;
 using User = Entities.Useres.User;
 
@@ -20,122 +26,148 @@ namespace presentation.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly IUserRepository userRepository;
+        private readonly IUserRepository _userRepository;
 
         public UserController(IUserRepository userRepository)
         {
-            this.userRepository = userRepository;
+            this._userRepository = userRepository;
         }
 
-        // برای دسترسی علاوه بر نقش باید iaActive هم چک بشود
-        [PermissionAuthorize(Permissions.User.GetAll)]
+
+        [ApiResultFilter]
+        #region ApiResultFilter
+        //با استفاده از این فیلتر خروجی کنترلر ها را به ApiResult تبدیل میکنیم 
+        // توجه : خروجی هر کنترلری را از نوع ApiResult قرار ندهیم مانند کنترلر هایی
+        // که خروجیشان ازنوع فایل هست چرا که به ApiResult قابل تبدیل شدن نیستند
+        #endregion
+        [PermissionAuthorize(Permissions.User.GetAll,Admin.admin)]
         [HttpGet]
         public async Task<ActionResult<List<User>>> GetAll(CancellationToken cancellationToken)
         {
-            var users = await userRepository.TableNoTracking.ToListAsync(cancellationToken);
+            var users = await _userRepository.TableNoTracking.ToListAsync(cancellationToken);
+            //return users; 
             return Ok(users);
         }
 
-        [PermissionAuthorize(Permissions.User.GetUserById)]
+       
+        [PermissionAuthorize(Permissions.User.GetUserById, Admin.admin)]
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<User>> GetUserById(int id, CancellationToken cancellationToken)
+        public async Task<ApiResult<User>> GetUserById(int id, CancellationToken cancellationToken)
         {
-            var user = await userRepository.GetByIdAsync(cancellationToken, id);
+            var user = await _userRepository.GetByIdAsync(cancellationToken, id);
             if (user == null)
                 return NotFound();
             return user;
+
         }
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<ActionResult> SuignUp([FromForm] SignupUserDto signupUserDto, CancellationToken cancellationToken)
+        public async Task<ApiResult<User>> SuignUp([FromForm] SignupUserDto signupUserDto, CancellationToken cancellationToken)
         {
+            var exists = await _userRepository.TableNoTracking.AnyAsync(p => p.UserName == signupUserDto.UserName);
+
+            if (exists)
+            {
+                return Content("نام کاربر تکراری است");
+            }
+
             var user = new User()
             {
-                FullName = new FullName
-                {
-                    FirstName = signupUserDto.FirstName,
-                },
-                Age = signupUserDto.Age,
-                Addresses = new List<Address>
-                {
-                    new Address()
-                    {
-                        AddressTitle = signupUserDto.AddressTitle,
-                        City = signupUserDto.City,
-                    }
-
-                },
-                Gender = signupUserDto.Gender,
-                Role = signupUserDto.Role,
+                UserName = signupUserDto.UserName,
+                UserPhoneNumber = signupUserDto.phoneNumber,
+                UserAge = signupUserDto.Age,
+                UserGender = signupUserDto.Gender,
+                UserRole = signupUserDto.Role,
             };
-            var peId = signupUserDto.ParetnEmployeeId;
-            if (peId == null)
+            var parentEployeeId = signupUserDto.ParetnEmployeeId;
+            if (parentEployeeId == null)
             {
-                await userRepository.AddAsync(user, signupUserDto.Password, signupUserDto.Role, cancellationToken);
+                await _userRepository.AddUserAsync(user, signupUserDto.Password, cancellationToken);
             }
             else
             {
-                user.ParetnEmployeeId = signupUserDto.ParetnEmployeeId.Value;
-                await userRepository.AddAsync(user, signupUserDto.Password, signupUserDto.Role, cancellationToken);
+                user.UserParetnEmployeeId = signupUserDto.ParetnEmployeeId;
+                await _userRepository.AddUserAsync(user, signupUserDto.Password, cancellationToken);
             }
 
+            return Content($"{signupUserDto.UserName }: عزیز به وبسایت ما خوش آمدید");
 
-            return Content($"{signupUserDto.FirstName} : با موفقیت اضافه شد ");
         }
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<ActionResult<User>> Login(string FirstName, string password, CancellationToken cancellationToken)
+        public async Task<ApiResult<User>> Login(string FirstName, string password, CancellationToken cancellationToken)
         {
-            var user = await userRepository.Login(FirstName, password, cancellationToken);
+            var user = await _userRepository.Login(FirstName, password, cancellationToken);
             if (user == null)
-                return Content($"{FirstName} یافت نشد");
-            return user;
+                return NotFound();
+            return Ok(user);
         }
 
-        [AllowAnonymous]
+        [ApiResultFilter]
         [HttpPut]
         public async Task<ActionResult> Update([FromForm] UpdateUserDto user, CancellationToken cancellationToken)
         {
             var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int userId1 = Convert.ToInt32(userId);
-            var GetUser = await userRepository.GetByIdAsync(cancellationToken, userId1);
-
+           
+            var getUser = await _userRepository.GetByIdAsync(cancellationToken, userId1);
+            
             #region update user
 
-            GetUser.FullName.FirstName = user.FirstName;
-            GetUser.FullName.LastName = user.LasteName;
-            GetUser.Age = user.Age;
-            GetUser.PhoneNumber = user.PhoneNumber;
-            GetUser.Email = user.Email;
+            getUser.UserName = user.UserName;
+            getUser.UserAge = user.Age;
+            getUser.UserPhoneNumber = user.PhoneNumber;
+            getUser.UserEmail = user.Email;
             // ElementAt(i)
-            GetUser.Addresses.ElementAt(0).AddressTitle = user.AddressTitle;
-            GetUser.Addresses.ElementAt(0).City = user.City;
-            GetUser.Addresses.ElementAt(0).Town = user.Town;
-            GetUser.Addresses.ElementAt(0).Street = user.Street;
-            GetUser.Addresses.ElementAt(0).PostalCode = user.PostalCode;
+            getUser.UserAddresses.ElementAt(0).UserAddressTitle = user.AddressTitle;
+            getUser.UserAddresses.ElementAt(0).UserAddressCity = user.City;
+            getUser.UserAddresses.ElementAt(0).UserAddressTown = user.Town;
+            getUser.UserAddresses.ElementAt(0).UserAddressStreet = user.Street;
+            getUser.UserAddresses.ElementAt(0).UserAddressPostalCode = user.PostalCode;
 
             #endregion
 
-            await userRepository.UpdateUserAsync(GetUser, userId1, user.ProductImage, cancellationToken);
+            await _userRepository.UpdateUserAsync(getUser, userId1, user.ProductImage, cancellationToken);
 
 
             return Ok();
         }
 
-        [PermissionAuthorize(Permissions.User.Delete)]
+        [PermissionAuthorize(Permissions.User.Delete, Admin.admin)]
         [HttpDelete("{id:int}")]
-        public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken)
+        public async Task<ApiResult> Delete(int id, CancellationToken cancellationToken)
         {
-            var user = await userRepository.GetByIdAsync(cancellationToken, id);
-            user.IsActive = false;
-            await userRepository.UpdateAsync(user, cancellationToken);
+            var user = await _userRepository.GetByIdAsync(cancellationToken, id);
+            user.UserIsActive = false;
+            await _userRepository.UpdateAsync(user, cancellationToken);
 
-            return Ok();
+            return Content($"{user.UserName } باموفقیت حذف شد");
         }
 
+        [PermissionAuthorize(Permissions.User.AddSoperviserPermissionById, Admin.admin)]
+        [HttpPost]
+        public async Task<ApiResult> AddSoperviserPermissionById(int Id, CancellationToken cancellationToken)
+        {
 
+            bool Result = await _userRepository.ChangePermissinByID(Id, cancellationToken);
+
+            if (Result == false)
+            {
+                return Content("شما قادر به تغییر مجوز های کاربر وارد شده نمی باشید .");
+            }
+            return Content("مجوزهای کاربر با موفقیت تغییر کرد .");
+
+        }
+
+        [PermissionAuthorize(Permissions.User.AddAllSoperviserPermission, Admin.admin)]
+        [HttpPost]
+        public async Task<ActionResult> AddAllSoperviserPermission(CancellationToken cancellationToken)
+        {
+            await _userRepository.AllSupervisorChangePermissin(cancellationToken);
+            return Ok();
+        }
 
 
     }

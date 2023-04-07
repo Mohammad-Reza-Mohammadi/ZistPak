@@ -10,10 +10,10 @@ namespace Entities.Orders
 {
     public class Order:IntBaseEntity
     {
-        public int userId { get; set; }
-        public int RatingOreder { get; set; }//قیمت کل سبد خرید
+        public int UserId { get; set; }
+        public decimal OrderStar { get; set; }//قیمت کل سبد خرید
         public bool IsFinaly { get; set; }
-        public ICollection<OrderDetail> orderDetails { get; set; }
+        public virtual ICollection<OrderDetail> orderDetails { get; set; }
 
     }
 }

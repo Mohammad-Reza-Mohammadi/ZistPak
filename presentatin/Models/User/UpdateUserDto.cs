@@ -4,8 +4,7 @@ namespace presentation.Models
 {
     public class UpdateUserDto
     {
-        public string FirstName { get; set; }
-        public string LasteName { get; set; }
+        public string UserName { get; set; }
         public int Age { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
@@ -15,5 +14,6 @@ namespace presentation.Models
         public string Town { get; set; }
         public string Street { get; set; }
         public string PostalCode { get; set; }
+        //public int userAddressId { get; set; }
     }
 }

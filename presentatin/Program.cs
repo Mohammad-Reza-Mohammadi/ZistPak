@@ -25,12 +25,12 @@ builder.Services.AddOurSwagger();
 builder.Services.AddDbContext<ZPakContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("ZPakServer")));
 
-builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddTransient<IUserRepository, UserRepository>();
-builder.Services.AddTransient<ICargoRepository , CargoRepository>();
-builder.Services.AddTransient<IItemRepository, ItemRepository>();
-builder.Services.AddTransient<IMunicipalityRepository, MunicipalityRepository>();
-builder.Services.AddTransient<IBasketRepository, BasketRepository>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ICargoRepository , CargoRepository>();
+builder.Services.AddScoped<IItemRepository, ItemRepository>();
+builder.Services.AddScoped<IOrderRepository, OderRepository>();
+builder.Services.AddScoped<IOrderDetailRepository , OrderDetailRepository>();
 
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, AuthorizationPolicyProvider>();
 

@@ -22,32 +22,76 @@ namespace Data.Repositories
     public class UserRepository : Repository<User>, IUserRepository
     {
         private readonly AppSettings _appSettings;
+
+        
+
         public UserRepository(ZPakContext dbContext, IOptions<AppSettings> appSettings)
             : base(dbContext)
         {
             _appSettings = appSettings.Value;
+           
         }
 
-        public async Task AddAsync(User user, string password, Role Role, CancellationToken cancellationToken)
+        public async Task<Address> Getaddress(int userId)
+        {
+            return await DbContext.Set<Address>().Where(u => u.UserAddressOwnerId == userId).SingleOrDefaultAsync(); ;
+        }
+        public async Task<bool> GetUserByName(string userName)
+        {
+           User user = await DbContext.Set<User>().Where(u => u.UserName == userName).SingleOrDefaultAsync();
+            if (user == null)
+                return false;
+            return true;
+        }
+
+        public async Task AddUserAsync(User user, string password, CancellationToken cancellationToken)
         {
             var passswordHash = SecurityHelper.GetSha256Hash(password);
-            user.HashPassword = passswordHash;
+            user.UserPasswordHash = passswordHash;
 
             //به طور پیش فرض افراد فقط میتوانند به کنترلر هایی دسترسی داشته باشند که فقط نیاز به لاگین دارد
             // give permission
-            switch (Role)
+            switch (user.UserRole)
             {
-                case Role.Supervisor:
+                case UserRole.Municipality:
                     {
                         User user1 = new User()
                         {
                             CreateDate = DateTime.Today.ToShamsi(),
-                            HashPassword = user.HashPassword,
-                            FullName = user.FullName,
-                            Age = user.Age,
-                            Addresses = user.Addresses,
-                            Gender = user.Gender,
-                            Role = user.Role,
+                            UserPasswordHash = user.UserPasswordHash,
+                            UserName = user.UserName,
+                            UserAge = user.UserAge,
+                            UserGender = user.UserGender,
+                            UserRole = user.UserRole,
+                            //به طور پیش فرض ناظر نمیتواند محموله ای را تغییر دهد باید شهرداری مجوز را بدهد
+                            #region add permissons
+                            UserPermissions = new List<UPermissions>
+                            {
+                                new UPermissions()
+                                {
+                                    Permission = "Permissions.User.AddAllSoperviserPermission",
+                                },
+                                new UPermissions()
+                                {
+                                    Permission = "Permissions.User.AddSoperviserPermissionById"
+                                }
+                            }
+                            #endregion
+                        };
+
+                        await base.AddAsync(user1, cancellationToken);
+                        break;
+                    }
+                case UserRole.Supervisor:
+                    {
+                        User user1 = new User()
+                        {
+                            CreateDate = DateTime.Today.ToShamsi(),
+                            UserPasswordHash = user.UserPasswordHash,
+                            UserName = user.UserName,
+                            UserAge = user.UserAge,
+                            UserGender = user.UserGender,
+                            UserRole = user.UserRole,
                             //به طور پیش فرض ناظر نمیتواند محموله ای را تغییر دهد باید شهرداری مجوز را بدهد
                             #region add permissons
                             //permissions = new List<UserPermissions>
@@ -63,26 +107,25 @@ namespace Data.Repositories
                             //}
                             #endregion
                         };
-                        var paId = user.ParetnEmployeeId;
-                        if (paId != null)
+                        var UserParetnEmployeeId1 = user.UserParetnEmployeeId;
+                        if (UserParetnEmployeeId1 != null)
                         {
-                            user1.ParetnEmployeeId = paId;
+                            user1.UserParetnEmployeeId = UserParetnEmployeeId1;
                         }
-                        var u = user1;
+
                         await base.AddAsync(user1, cancellationToken);
                         break;
                     }
-                case Role.Contractor:
+                case UserRole.Contractor:
                     {
                         User user1 = new User()
                         {
                             CreateDate = DateTime.Today.ToShamsi(),
-                            HashPassword = user.HashPassword,
-                            FullName = user.FullName,
-                            Age = user.Age,
-                            Addresses = user.Addresses,
-                            Gender = user.Gender,
-                            Role = user.Role,
+                            UserPasswordHash = user.UserPasswordHash,
+                            UserName = user.UserName,
+                            UserAge = user.UserAge,
+                            UserGender = user.UserGender,
+                            UserRole = user.UserRole,
                             // طبق سناریو این کاربر هم فقط میتواند فقط به قسمت هایی که نیاز به لاگین دارد دسترسی داشته باشد
                             #region add permissons
                             //permissions = new List<UserPermissions>
@@ -94,26 +137,25 @@ namespace Data.Repositories
                             //}
                             #endregion
                         };
-                        var peId = user.ParetnEmployeeId;
-                        if (peId != null)
+                        var UserParetnEmployeeId1 = user.UserParetnEmployeeId;
+                        if (UserParetnEmployeeId1 != null)
                         {
-                            user1.ParetnEmployeeId = peId;
+                            user1.UserParetnEmployeeId = UserParetnEmployeeId1;
                         }
                         await base.AddAsync(user1, cancellationToken);
                         break;
                     }
-                case Role.ExhibitorEmployee:
+                case UserRole.ExhibitorEmployee:
                     {
                         User user1 = new User()
                         {
                             CreateDate = DateTime.Today.ToShamsi(),
-                            HashPassword = user.HashPassword,
-                            FullName = user.FullName,
-                            Age = user.Age,
-                            Addresses = user.Addresses,
-                            Gender = user.Gender,
-                            Role = user.Role,
-                            permissions = new List<UPermissions>
+                            UserPasswordHash = user.UserPasswordHash,
+                            UserName = user.UserName,
+                            UserAge = user.UserAge,
+                            UserGender = user.UserGender,
+                            UserRole = user.UserRole,
+                            UserPermissions = new List<UPermissions>
                             {
                                 new UPermissions()
                                 {
@@ -126,27 +168,26 @@ namespace Data.Repositories
                                 }
                             }
                         };
-                        var peId = user.ParetnEmployeeId;
-                        if (peId != null)
+                        var UserParetnEmployeeId1 = user.UserParetnEmployeeId;
+                        if (UserParetnEmployeeId1 != null)
                         {
-                            user1.ParetnEmployeeId = peId;
+                            user1.UserParetnEmployeeId = UserParetnEmployeeId1;
                         }
                         await base.AddAsync(user1, cancellationToken);
                         break;
                     }
-                case Role.CarEmployee:
+                case UserRole.CarEmployee:
                     {
                         User user1 = new User()
                         {
                             CreateDate = DateTime.Today.ToShamsi(),
-                            HashPassword = user.HashPassword,
-                            FullName = user.FullName,
-                            Age = user.Age,
-                            Addresses = user.Addresses,
-                            Gender = user.Gender,
-                            Role = user.Role,
+                            UserPasswordHash = user.UserPasswordHash,
+                            UserName = user.UserName,
+                            UserAge = user.UserAge,
+                            UserGender = user.UserGender,
+                            UserRole = user.UserRole,
                             // به دلیل ندانستن کار اصلی این کاربر یک مجوز دلخواه داده شده
-                            permissions = new List<UPermissions>
+                            UserPermissions = new List<UPermissions>
                             {
                                 new UPermissions()
                                 {
@@ -154,125 +195,66 @@ namespace Data.Repositories
                                 }
                             }
                         };
-                        var peId = user.ParetnEmployeeId;
-                        if (peId != null)
+                        var UserParetnEmployeeId1 = user.UserParetnEmployeeId;
+                        if (UserParetnEmployeeId1 != null)
                         {
-                            user1.ParetnEmployeeId = peId;
+                            user1.UserParetnEmployeeId = UserParetnEmployeeId1;
                         }
                         await base.AddAsync(user1, cancellationToken);
                         break;
                     }
-                case Role.Customer:
+                case UserRole.Customer:
                     {
                         User user1 = new User()
                         {
                             CreateDate = DateTime.Today.ToShamsi(),
-                            HashPassword = user.HashPassword,
-                            FullName = user.FullName,
-                            Age = user.Age,
-                            Addresses = user.Addresses,
-                            Gender = user.Gender,
-                            Role = user.Role,
-                            permissions = new List<UPermissions>
+                            UserPasswordHash = user.UserPasswordHash,
+                            UserName = user.UserName,
+                            UserAge = user.UserAge,
+                            UserGender = user.UserGender,
+                            UserRole = user.UserRole,
+                            UserPermissions = new List<UPermissions>
                             {
                                 new UPermissions()
                                 {
-                                    Permission = "Permissions.Basket.AddToCart"
+                                    Permission = "Permissions.Order.AddToOrder"
                                 },
                                 new UPermissions()
                                 {
-                                    Permission = "Permissions.Basket.DeleteFromCart"
+                                    Permission = "Permissions.Order.DeleteFromOrder"
                                 },
                                 new UPermissions()
                                 {
-                                    Permission = "Permissions.Basket.ShowOrder"
+                                    Permission = "Permissions.Order.ShowOrder"
+                                },
+                                new UPermissions()
+                                {
+                                    Permission = "Permissions.Order.UpdateOrederDetailInOreder"
                                 },
                             }
                         };
-                        var peId = user.ParetnEmployeeId;
-                        if (peId != null)
-                        {
-                            user.ParetnEmployeeId = user1.ParetnEmployeeId.Value;
-                        }
+
                         await base.AddAsync(user1, cancellationToken);
                         break;
                     }
-                case Role.Admin:
+                case UserRole.Admin:
                     {
                         User user1 = new User()
                         {
                             CreateDate = DateTime.Today.ToShamsi(),
-                            HashPassword = user.HashPassword,
-                            FullName = user.FullName,
-                            Age = user.Age,
-                            Addresses = user.Addresses,
-                            Gender = user.Gender,
-                            Role = user.Role,
-                            permissions = new List<UPermissions>
+                            UserPasswordHash = user.UserPasswordHash,
+                            UserName = user.UserName,
+                            UserAge = user.UserAge,
+                            UserGender = user.UserGender,
+                            UserRole = user.UserRole,
+                            UserPermissions = new List<UPermissions>
                             {
                                 new UPermissions()
                                 {
-                                    Permission = "Permissions.User.GetAll"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.User.Delete"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.User.GetUserById"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.Item.AddItem"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.Item.UpdateItem"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.Item.Delete"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.Cargo.AddCargo"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.Cargo.UpdateCargo"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.Cargo.DeleteCargo"
-                                }, 
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.Municipality.AddSoperviserPermissionById"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.Municipality.AddAllSoperviserPermission"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.Basket.AddToCart"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.Basket.DeleteFromCart"
-                                },
-                                new UPermissions()
-                                {
-                                    Permission = "Permissions.Basket.ShowOrder"
+                                    Permission = "Permissions.Admin.admin"
                                 },
                             }
                         };
-                        var peId = user.ParetnEmployeeId;
-                        if (peId != null)
-                        {
-                            user.ParetnEmployeeId = user1.ParetnEmployeeId.Value;
-                        }
                         await base.AddAsync(user1, cancellationToken);
                         break;
                     }
@@ -283,7 +265,7 @@ namespace Data.Repositories
         public async Task<User> Login(string firstName, string password, CancellationToken cancellationToken)
         {
             var passswordHash = SecurityHelper.GetSha256Hash(password);
-            var user = await Table.Where(u => u.FullName.FirstName == firstName && u.HashPassword == passswordHash).SingleOrDefaultAsync();
+            var user = await Table.Where(u => u.UserName == firstName && u.UserPasswordHash == passswordHash).SingleOrDefaultAsync();
             if (user == null)
             {
                 return null;
@@ -301,9 +283,9 @@ namespace Data.Repositories
             foreach (var permisson in ListPermissions)
             {
                 claims.AddClaims(new[]{
-                new Claim(Permissions.Permission,permisson.Permission.ToString()),
-                new Claim(ClaimTypes.NameIdentifier,user.Id.ToString()),
-                }); ;
+                    new Claim(Permissions.Permission,permisson.Permission.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier,user.Id.ToString()),
+                    }); ;
 
             }
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -313,36 +295,84 @@ namespace Data.Repositories
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            user.Token = tokenHandler.WriteToken(token);
+            user.UserToken = tokenHandler.WriteToken(token);
 
             //The password will not be returned
-            user.HashPassword = null;
-            user.permissions = null;
+            user.UserPasswordHash = null;
+            user.UserPermissions = null;
             return user;
         }
 
         public async Task UpdateUserAsync(User user, int userId, IFormFile userImageFile, CancellationToken cancellationToken)
         {
             string ImagPath = UserImageExtension.ImgeToString(userImageFile);
-            user.Image = ImagPath;
+            user.UserImage = ImagPath;
             await base.UpdateAsync(user, cancellationToken);
             return;
 
         }
 
-        // اول لیست مجوز ها را از دیتا بیس بگیر 
+        public async Task<bool> ChangePermissinByID(int id, CancellationToken cancellationToken)
+        {
+            return true;
+            User User = await DbContext.Set<User>().Where(u => u.Id == id).SingleOrDefaultAsync(cancellationToken);
+            var UserRole = User.UserRole;
+            if (UserRole != UserRole.Supervisor)
+            {
+                return false;
+            }
+            User.UserPermissions = new List<UPermissions>
+            {
+                new UPermissions()
+                {
+                    userId = id,
+                    Permission = "Permissions.Cargo.AddCargo"
+                },
+                new UPermissions()
+                {
+                    userId = id,
+                    Permission = "Permissions.Cargo.UpdateCargo"
+                },
+                new UPermissions()
+                {
+                    userId = id,
+                    Permission = "Permissions.Cargo.DeleteCargo"
+                },
+
+            };
+        }
+
+        public async Task AllSupervisorChangePermissin(CancellationToken cancellationToken)
+        {
+
+            List<User> users = await DbContext.Set<User>().Where(u => u.UserRole == UserRole.Supervisor).ToListAsync();
+
+            foreach (var user in users)
+            {
+                List<UPermissions> addPermission = new List<UPermissions>
+                {
+                    new UPermissions()
+                    {
+                        userId = user.Id,
+                        Permission = "Permissions.Cargo.AddCargo",
+                    },
+                    new UPermissions()
+                    {
+                        userId = user.Id,
+                        Permission = "Permissions.Cargo.UpdateCargo"
+                    },
+                    new UPermissions()
+                    {
+                        userId = user.Id,
+                        Permission = "Permissions.Cargo.DeleteCargo"
+                    },
+                };
+
+                await DbContext.Set<UPermissions>().AddRangeAsync(addPermission, cancellationToken);
+                await DbContext.SaveChangesAsync();
+            }
 
 
-
+        }
     }
 }
-
-#region roley
-//new Claim(ClaimTypes.NameIdentifier , user.Id.ToString()),
-//new Claim(ClaimTypes.Role , user.Role.ToString()),
-#endregion
-#region Claim or Policy
-//باید به در قسمت اضافه کردن policy ها یک policy جدید اضافه کنیم
-//Claim Base (in Sevice.Authorization add section)
-//new Claim("AccessAlluser" , user.AccsessAllUser.ToString()),////user.AccsessAllUser==bool property in user table
-#endregion

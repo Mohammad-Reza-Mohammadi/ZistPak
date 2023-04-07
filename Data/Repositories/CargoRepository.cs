@@ -25,8 +25,6 @@ namespace Data.Repositories
 
         public async Task AddCargoAsync(Cargo cargo, CancellationToken cancellationToken)
         {
-            //extra task :add save imag in wwwroot
-
             //await DbContext.Set<Cargo>().AddAsync(cargo, cancellationToken);
             //DbContext.SaveChanges();
 

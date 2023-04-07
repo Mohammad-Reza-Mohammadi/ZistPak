@@ -19,8 +19,8 @@ namespace Data.EntityConfiguration.OrderConfiguration
             #region Other Property
             builder.Property(c => c.CreateDate).IsRequired();
             builder.Property(c => c.UpdateDate).IsRequired(false);
-            builder.Property(c => c.userId).IsRequired();
-            builder.Property(c => c.RatingOreder).IsRequired();
+            builder.Property(c => c.UserId).IsRequired();
+            builder.Property(c => c.OrderStar).IsRequired();
             builder.Property(c => c.IsFinaly).IsRequired();
 
             #endregion

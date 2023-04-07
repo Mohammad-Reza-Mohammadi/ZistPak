@@ -10,13 +10,13 @@ namespace Entities.User.Owned
 {
     public class Address
     {
-        public int Id { get; set; }
-        public int OwnerId { get; set; }
-        public string AddressTitle { get; set; }
-      //public enum Title { get; set; }
-        public string City { get; set; }
-        public string? Town { get; set; }
-        public string? Street { get; set; }
-        public string? PostalCode { get; set; }
+        public int UserAddressId { get; set; }
+        public int UserAddressOwnerId { get; set; }
+        public string UserAddressTitle { get; set; }
+        //public enum Title { get; set; }
+        public string UserAddressCity { get; set; }
+        public string? UserAddressTown { get; set; }
+        public string? UserAddressStreet { get; set; }
+        public string? UserAddressPostalCode { get; set; }
     }
 }

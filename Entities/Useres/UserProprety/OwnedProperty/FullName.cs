@@ -10,7 +10,7 @@ namespace Entities.User.Owned
     [Owned]
     public class FullName
     {
-        public string FirstName { get; set; }
-        public string? LastName { get; set; }
+        public string? UserFirstName { get; set; }
+        public string? UserLastName { get; set; }
     }
 }

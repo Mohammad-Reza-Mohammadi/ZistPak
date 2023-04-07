@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace Data.Contracts
 {
-    public interface IBasketRepository:IRepository<Order>
+    public interface IOrderRepository:IRepository<Order>
     {
-        Task<bool> AddToBasket(int CurrentUserId, int Id, CancellationToken cancellationToken);
-        Task<List<OrderDetail>> GetOrderDetails(int OrderDetailsId ,CancellationToken cancellationToken);
+        Task<bool> AddToOrder(int CurrentUserId, int Id, CancellationToken cancellationToken);
+        Task<List<OrderDetail>> GetOrderDetails(int orderId, CancellationToken cancellationToken);
         public Task<bool> DeleteFromOrder(int OrderDeratilsId, CancellationToken cancellationToken);
     }
 }

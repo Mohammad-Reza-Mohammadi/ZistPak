@@ -11,14 +11,14 @@ namespace Entities.Orders
     public class OrderDetail : IntBaseEntity
     {
 
-        public int rating { get; set; }
+        public decimal StarCargo { get; set; }
         public int CountCargo { get; set; }
 
 
         public int OrderId { get; set; }
-        public int cargoId { get; set; }
+        public int CargoId { get; set; }
 
         public Order Order { get; set; }
-        public Cargo.Cargo cargo { get; set; }
+        public Cargo.Cargo Cargo { get; set; }
     }
 }

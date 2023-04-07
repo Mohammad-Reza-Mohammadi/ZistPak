@@ -4,8 +4,8 @@
     {
         public string Title { get; set; }
         public int Count { get; set; }
-        public int price { get; set; }
-        public int Sum { get; set; }
+        public decimal Star { get; set; }
+        public decimal Sum { get; set; }
         public int OrderDetailsId { get; set; }
     }
 }

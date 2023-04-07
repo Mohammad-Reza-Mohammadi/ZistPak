@@ -19,13 +19,13 @@ namespace Data.EntityConfiguration
 
 
             #region Other Property
-            builder.Property(c => c.status).IsRequired();
-            builder.Property(c => c.Name).IsRequired();
+            builder.Property(c => c.CargoStatus).IsRequired();
+            builder.Property(c => c.CargoName).IsRequired();
             builder.Property(c => c.CreateDate).IsRequired();
             builder.Property(c => c.UpdateDate).IsRequired(false);
-            builder.Property(c => c.Rating).IsRequired();
-            builder.Property(c => c.Count).IsRequired();
-            builder.Property(c=>c.Whight).IsRequired();
+            builder.Property(c => c.CargoStar).IsRequired();
+            builder.Property(c => c.ItemCount).IsRequired();
+            builder.Property(c => c.CargoWhight).IsRequired();
             #endregion
 
 

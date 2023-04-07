@@ -15,12 +15,12 @@ namespace Data.EntityConfiguration
         {
             builder.HasKey(i=>i.Id);
 
-            builder.Property(i => i.Name).IsRequired();
-            builder.Property(i => i.Whight).IsRequired();
-            builder.Property(i => i.Rating).IsRequired();
+            builder.Property(i => i.ItemValue).IsRequired();
+            builder.Property(i => i.ItemWhight).IsRequired();
+            builder.Property(i => i.ItemStar).IsRequired();
 
             #region Navigation Property
-            builder.HasOne(c => c.cargo)
+            builder.HasOne(c => c.Cargo)
                 .WithMany(c => c.Items)
                 .HasForeignKey(c => c.CargoId)
                 .OnDelete(DeleteBehavior.Restrict);

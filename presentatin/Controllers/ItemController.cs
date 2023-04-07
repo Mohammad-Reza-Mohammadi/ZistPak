@@ -10,6 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using presentation.Models.ItemDto;
 using Microsoft.AspNetCore.Authorization;
 using Utility.SwaggerConfig.Permissions;
+using static Utility.SwaggerConfig.Permissions.Permissions;
+using Item = Entities.Cargo.Item;
+using Cargo = Entities.Cargo.Cargo;
 
 namespace presentation.Controllers
 {
@@ -18,116 +21,120 @@ namespace presentation.Controllers
     [ApiController]
     public class ItemController : ControllerBase
     {
-        public IItemRepository itemRepository { get; }
-        public ICargoRepository cargoRepository { get; }
+        private IItemRepository _itemRepository { get; }
+        private ICargoRepository _cargoRepository { get; }
 
-        public ItemController(IItemRepository _itemRepository, ICargoRepository _cargoRepository)
+        public ItemController(IItemRepository itemRepository, ICargoRepository cargoRepository)
         {
-            itemRepository = _itemRepository;
-            cargoRepository = _cargoRepository;
+            _itemRepository = itemRepository;
+            _cargoRepository = cargoRepository;
         }
 
+        [AllowAnonymous]
         [HttpGet]
-        public async Task<List<Item>> GetAllItem(CancellationToken cancellationToken)
+        public async Task<ActionResult<List<Item>>> GetAllItem(CancellationToken cancellationToken)
         {
-            var cargos = await itemRepository.TableNoTracking.ToListAsync(cancellationToken);
-            return cargos;
+            var items = await _itemRepository.TableNoTracking.ToListAsync(cancellationToken);
+            if (items==null)
+                return Content("آیتمی یافت نشد");
+            return items;
         }
 
-
+        [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Item>> GetItemById(int id, CancellationToken cancellationToken)
         {
-            var item = await itemRepository.GetByIdAsync(cancellationToken, id);
+            var item = await _itemRepository.GetByIdAsync(cancellationToken, id);
             if (item == null)
-                return NotFound();
+                return Content("آیتم یافت نشد");
             return item;
         }
 
-        [PermissionAuthorize(Permissions.Item.AddItem)]
+        [PermissionAuthorize(Permissions.Item.AddItem, Admin.admin)]
         [HttpPost]
         public async Task<ActionResult> AddItem([FromForm] AddItemDto addItemDto, CancellationToken cancellationToken)
         {
-            int cargoId = addItemDto.CargoId;           
+            int cargoId = addItemDto.CargoId;
 
-                var item = new Item()
-                {
-                    CreateDate = DateTime.Now.ToShamsi(),
-                    Rating = addItemDto.Rating,
-                    Name = addItemDto.Name,
-                    Whight = addItemDto.Whight,
-                    CargoId = addItemDto.CargoId,
-                };        
-        
-            await itemRepository.AddAsync(item, cancellationToken);
-
-            List<Item> items2 = await itemRepository.GetItemByCargoId(cargoId, cancellationToken);
-            Cargo cargo = await cargoRepository.GetByIdAsync(cancellationToken, cargoId);
+            var item = new Item()
             {
-                cargo.Whight = items2.Sum(i => i.Whight);
-                cargo.Rating = items2.Sum(i => i.Rating);
-                cargo.Count = items2.Count;
-                cargo.UpdateDate = DateTime.Now.ToShamsi();
+                CreateDate = DateTime.Now.ToShamsi(),
+                ItemStar = addItemDto.Rating,
+                ItemValue = addItemDto.Value,
+                ItemWhight = addItemDto.Whight,
+                CargoId = addItemDto.CargoId,
             };
 
-            await cargoRepository.UpdateAsync(cargo, cancellationToken);
+            await _itemRepository.AddAsync(item, cancellationToken);
+
+            
+            List<Item> items2 = await _itemRepository.GetItemByCargoId(cargoId, cancellationToken);
+            Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, cargoId);//Update Cargo
+            {
+                cargo.CargoWhight = items2.Sum(i => i.ItemWhight);// وزن محموله
+                cargo.CargoStar = items2.Sum(i => i.ItemStar);// امتیاز محموله
+                cargo.ItemCount = items2.Count ;//تعداد ایتم موجود در محموله
+                cargo.UpdateDate = DateTime.Now.ToShamsi();// تاریخ اپدیت
+            };
+
+            await _cargoRepository.UpdateAsync(cargo, cancellationToken);
             return Ok("Items Successfully Added");
         }
 
-
-        [PermissionAuthorize(Permissions.Item.UpdateItem)]
+        [PermissionAuthorize(Permissions.Item.UpdateItem, Admin.admin)]
         [HttpPut]
         public async Task<ActionResult> UpdateItem([FromForm] UpdateItemDto updateItemDto, CancellationToken cancellationToken)
         {
             int itemId = updateItemDto.ItemId;
             int cargoId = updateItemDto.CargoId;
 
-            Item item = await itemRepository.GetByIdAsync(cancellationToken, itemId);
+            Item item = await _itemRepository.GetByIdAsync(cancellationToken, itemId);
             if (itemId == null)
             {
                 return NotFound();
             }
 
             item.UpdateDate = DateTime.Now.ToShamsi();
-            item.Whight = updateItemDto.Whight;
-            item.Rating = updateItemDto.Rating;
-            item.Name = updateItemDto.Name;
+            item.ItemWhight = updateItemDto.Whight;
+            item.ItemStar = updateItemDto.Rating;
+            item.ItemValue = updateItemDto.Value;
             item.CargoId = updateItemDto.CargoId;
 
-            await itemRepository.UpdateAsync(item, cancellationToken);
+            await _itemRepository.UpdateAsync(item, cancellationToken);
 
-            List<Item> listItem = await itemRepository.GetItemByCargoId(cargoId, cancellationToken);
-            Cargo cargo = await cargoRepository.GetByIdAsync(cancellationToken, cargoId);
+            List<Item> listItem = await _itemRepository.GetItemByCargoId(cargoId, cancellationToken);
+            Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, cargoId);//update Cargo
             {
-                cargo.Whight = listItem.Sum(i => i.Whight);
-                cargo.Rating = listItem.Sum(i => i.Rating);
-                cargo.Count = listItem.Count;
+                cargo.CargoWhight = listItem.Sum(i => i.ItemWhight);
+                cargo.CargoStar = listItem.Sum(i => i.ItemStar);
+                cargo.ItemCount = listItem.Count;
                 cargo.UpdateDate = DateTime.Now.ToShamsi();
             };
 
-            await cargoRepository.UpdateAsync(cargo, cancellationToken);
+            await _cargoRepository.UpdateAsync(cargo, cancellationToken);
 
             return Ok();
         }
 
-        [PermissionAuthorize(Permissions.Item.Delete)]
+        [PermissionAuthorize(Permissions.Item.Delete, Admin.admin)]
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            var item = await itemRepository.GetByIdAsync(cancellationToken, id);
-            var cargoId = item.CargoId;
-            await itemRepository.DeleteAsync(item, cancellationToken);
+            Item item = await _itemRepository.GetByIdAsync(cancellationToken, id);
+            int cargoId = item.CargoId;
 
-            List<Item> listItem = await itemRepository.GetItemByCargoId(cargoId, cancellationToken);
-            Cargo cargo = await cargoRepository.GetByIdAsync(cancellationToken, cargoId);
+            await _itemRepository.DeleteAsync(item, cancellationToken);
+
+            List<Item> listItem = await _itemRepository.GetItemByCargoId(cargoId, cancellationToken);
+            Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, cargoId);
             {
-                cargo.Whight = listItem.Sum(i => i.Whight);
-                cargo.Rating = listItem.Sum(i => i.Rating);
-                cargo.Count = listItem.Count;
+                cargo.CargoWhight = listItem.Sum(i => i.ItemWhight);
+                cargo.CargoStar = listItem.Sum(i => i.ItemStar);
+                cargo.ItemCount = listItem.Count;
                 cargo.UpdateDate = DateTime.Now.ToShamsi();
             };
 
-            await cargoRepository.UpdateAsync(cargo, cancellationToken);
+            await _cargoRepository.UpdateAsync(cargo, cancellationToken);
 
             return Ok();
         }

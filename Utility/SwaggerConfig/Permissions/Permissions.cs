@@ -10,11 +10,20 @@ namespace Utility.SwaggerConfig.Permissions
     {
         public static string Permission = "Permissions";
 
+
+        public static class Admin
+        {
+            public const string admin = "Permissions.Admin.admin";
+
+        }
         public static class User
         {
             public const string GetAll = "Permissions.User.GetAll";
             public const string Delete = "Permissions.User.Delete";
             public const string GetUserById = "Permissions.User.GetUserById";
+            public const string AddAllSoperviserPermission = "Permissions.User.AddAllSoperviserPermission";
+            public const string AddSoperviserPermissionById = "Permissions.User.AddSoperviserPermissionById";
+
         }
         public static class Item
         {
@@ -30,19 +39,13 @@ namespace Utility.SwaggerConfig.Permissions
             public const string DeleteCargo = "Permissions.Cargo.DeleteCargo";
 
         }
-        public static class Municipality
-        {
-            public const string AddCantractorPermissionById = "Permissions.Municipality.AddAllSoperviserPermission";
-            public const string AddAllCantractorPermission = "Permissions.Municipality.AddSoperviserPermissionById";
 
-        }
-
-        public static class Basket
+        public static class Order
         {
-            public const string AddToCart = "Permissions.Basket.AddToCart";
-            public const string ShowOrder = "Permissions.Basket.ShowOrder";
-            public const string DeleteFromCart = "Permissions.Basket.DeleteFromCart";
-            //public const string  = "Permissions.Basket.";
+            public const string AddToOrder = "Permissions.Order.AddToOrder";
+            public const string ShowOrder = "Permissions.Order.ShowOrder";
+            public const string DeleteFromOrder = "Permissions.Order.DeleteFromOrder";
+            public const string UpdateOrederDetailInOreder = "Permissions.Order.UpdateOrederDetailInOreder";
         }
 
         // میتوان که برای چندین کنترلر یک مجوز ساخت که نیاز نباشد به کاربر برای هر کنترلر یک مجوز بدهیم

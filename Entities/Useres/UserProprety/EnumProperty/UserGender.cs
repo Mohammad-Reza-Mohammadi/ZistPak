@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Entities.User.Enum
 {
-    public enum Gender
+    public enum UserGender
     {
         Male   = 0,   // مرد
         Female = 1, // زن

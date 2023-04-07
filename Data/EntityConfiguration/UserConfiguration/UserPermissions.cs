@@ -20,9 +20,9 @@ namespace Data.EntityConfiguration.UserConfiguration
 
             #region navigtion Property
             builder.HasOne(c=>c.user)
-                .WithMany(c=>c.permissions)
+                .WithMany(c=>c.UserPermissions)
                 .HasForeignKey(c => c.userId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
             #endregion
         }
 

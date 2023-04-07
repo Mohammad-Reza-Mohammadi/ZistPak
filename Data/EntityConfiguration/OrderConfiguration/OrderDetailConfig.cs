@@ -19,7 +19,7 @@ namespace Data.EntityConfiguration.OrderConfiguration
             #region Other Property
             builder.Property(c => c.CreateDate).IsRequired();
             builder.Property(c => c.UpdateDate).IsRequired(false);
-            builder.Property(c => c.rating).IsRequired();
+            builder.Property(c => c.StarCargo).IsRequired();
             builder.Property(c => c.CountCargo).IsRequired();
             #endregion
 
@@ -28,9 +28,9 @@ namespace Data.EntityConfiguration.OrderConfiguration
                 .WithMany(c=>c.orderDetails)
                 .HasForeignKey(c=>c.OrderId);
 
-            builder.HasOne(c => c.cargo)
+            builder.HasOne(c => c.Cargo)
                 .WithMany(c => c.OrderDetails)
-                .HasForeignKey(c => c.cargoId);
+                .HasForeignKey(c => c.CargoId);
             #endregion
 
         }

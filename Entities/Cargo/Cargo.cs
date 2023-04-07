@@ -14,11 +14,11 @@ namespace Entities.Cargo
 {
     public class Cargo:IntBaseEntity
     {
-        public string  Name { get; set; }
-        public Status status { get; set; }
-        public decimal Rating { get; set; }
-        public int Count { get; set; }
-        public decimal Whight { get; set; }
+        public string  CargoName { get; set; }
+        public Status CargoStatus { get; set; }
+        public decimal CargoStar { get; set; }
+        public int ItemCount { get; set; }
+        public decimal CargoWhight { get; set; }
 
         #region Relational Property
         public virtual ICollection<Item> Items { get; set; }

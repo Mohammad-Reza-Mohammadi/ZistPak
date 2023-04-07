@@ -10,14 +10,14 @@ namespace Entities.Cargo
 {
     public class Item:IntBaseEntity
     {
-        public Value Name { get; set; }
-        public decimal Whight { get; set; }
-        public decimal Rating { get; set; }
+        public Value ItemValue { get; set; }
+        public decimal ItemWhight { get; set; }
+        public decimal ItemStar { get; set; }
 
 
         #region Relational Property
         public int CargoId { get; set; }
-        public Cargo cargo { get; set; }
+        public Cargo Cargo { get; set; }
         #endregion
 
 

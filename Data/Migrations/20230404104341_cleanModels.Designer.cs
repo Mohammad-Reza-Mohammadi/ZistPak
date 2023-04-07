@@ -4,6 +4,7 @@ using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ZPakContext))]
-    partial class ZPakContextModelSnapshot : ModelSnapshot
+    [Migration("20230404104341_cleanModels")]
+    partial class cleanModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,28 +32,28 @@ namespace Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("CargoName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("CargoStar")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("CargoStatus")
+                    b.Property<int>("Count")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("CargoWhight")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("CreateDate")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ItemCount")
-                        .HasColumnType("int");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Rating")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UpdateDate")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Whight")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("status")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -73,23 +75,83 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("ItemStar")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ItemValue")
+                    b.Property<int>("Name")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("ItemWhight")
+                    b.Property<decimal>("Rating")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UpdateDate")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Whight")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CargoId");
 
                     b.ToTable("Item");
+                });
+
+            modelBuilder.Entity("Entities.Municipality.Municipality", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("CreateDate")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Hashpassword")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Region")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdateDate")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Municipality");
+                });
+
+            modelBuilder.Entity("Entities.Municipality.MunicipalityPermissions", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Permission")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("municiaplityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("municipalityId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("municipalityId");
+
+                    b.ToTable("MunicipalityPermissions");
                 });
 
             modelBuilder.Entity("Entities.Orders.Order", b =>
@@ -107,13 +169,13 @@ namespace Data.Migrations
                     b.Property<bool>("IsFinaly")
                         .HasColumnType("bit");
 
-                    b.Property<decimal>("OrderStar")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<int>("RatingOreder")
+                        .HasColumnType("int");
 
                     b.Property<string>("UpdateDate")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
+                    b.Property<int>("userId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -129,9 +191,6 @@ namespace Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("CargoId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CountCargo")
                         .HasColumnType("int");
 
@@ -142,17 +201,20 @@ namespace Data.Migrations
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("StarCargo")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("UpdateDate")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("cargoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("rating")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CargoId");
-
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("cargoId");
 
                     b.ToTable("OrderDetail");
                 });
@@ -191,6 +253,9 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("MunicipalityId")
+                        .HasColumnType("int");
+
                     b.Property<string>("UpdateDate")
                         .HasColumnType("nvarchar(max)");
 
@@ -213,7 +278,7 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("UserParetnEmployeeId")
+                    b.Property<int>("UserParetnEmployeeId")
                         .HasColumnType("int");
 
                     b.Property<string>("UserPasswordHash")
@@ -226,13 +291,12 @@ namespace Data.Migrations
                     b.Property<int>("UserRole")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("UserStar")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("UserToken")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MunicipalityId");
 
                     b.HasIndex("UserParetnEmployeeId");
 
@@ -241,32 +305,43 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Entities.Cargo.Item", b =>
                 {
-                    b.HasOne("Entities.Cargo.Cargo", "Cargo")
+                    b.HasOne("Entities.Cargo.Cargo", "cargo")
                         .WithMany("Items")
                         .HasForeignKey("CargoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Cargo");
+                    b.Navigation("cargo");
+                });
+
+            modelBuilder.Entity("Entities.Municipality.MunicipalityPermissions", b =>
+                {
+                    b.HasOne("Entities.Municipality.Municipality", "municipality")
+                        .WithMany("municipalityPermissions")
+                        .HasForeignKey("municipalityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("municipality");
                 });
 
             modelBuilder.Entity("Entities.Orders.OrderDetail", b =>
                 {
-                    b.HasOne("Entities.Cargo.Cargo", "Cargo")
-                        .WithMany("OrderDetails")
-                        .HasForeignKey("CargoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Entities.Orders.Order", "Order")
                         .WithMany("orderDetails")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Cargo");
+                    b.HasOne("Entities.Cargo.Cargo", "cargo")
+                        .WithMany("OrderDetails")
+                        .HasForeignKey("cargoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Order");
+
+                    b.Navigation("cargo");
                 });
 
             modelBuilder.Entity("Entities.Useres.UPermissions", b =>
@@ -274,7 +349,7 @@ namespace Data.Migrations
                     b.HasOne("Entities.Useres.User", "user")
                         .WithMany("UserPermissions")
                         .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("user");
@@ -282,10 +357,15 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Entities.Useres.User", b =>
                 {
+                    b.HasOne("Entities.Municipality.Municipality", null)
+                        .WithMany("users")
+                        .HasForeignKey("MunicipalityId");
+
                     b.HasOne("Entities.Useres.User", "UserParentEmployee")
                         .WithMany("UserChiledEmployee")
                         .HasForeignKey("UserParetnEmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.OwnsMany("Entities.User.Owned.Address", "UserAddresses", b1 =>
                         {
@@ -331,9 +411,11 @@ namespace Data.Migrations
                                 .HasColumnType("int");
 
                             b1.Property<string>("UserFirstName")
+                                .IsRequired()
                                 .HasColumnType("nvarchar(max)");
 
                             b1.Property<string>("UserLastName")
+                                .IsRequired()
                                 .HasColumnType("nvarchar(max)");
 
                             b1.HasKey("UserId");
@@ -357,6 +439,13 @@ namespace Data.Migrations
                     b.Navigation("Items");
 
                     b.Navigation("OrderDetails");
+                });
+
+            modelBuilder.Entity("Entities.Municipality.Municipality", b =>
+                {
+                    b.Navigation("municipalityPermissions");
+
+                    b.Navigation("users");
                 });
 
             modelBuilder.Entity("Entities.Orders.Order", b =>
