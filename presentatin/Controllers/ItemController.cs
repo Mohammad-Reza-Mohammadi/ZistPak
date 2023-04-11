@@ -13,12 +13,15 @@ using Utility.SwaggerConfig.Permissions;
 using static Utility.SwaggerConfig.Permissions.Permissions;
 using Item = Entities.Cargo.Item;
 using Cargo = Entities.Cargo.Cargo;
+using WebFramework.Api;
+using WebFramework.Filters;
 
 namespace presentation.Controllers
 {
     [Authorize]
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [ApiResultFilter]
     public class ItemController : ControllerBase
     {
         private IItemRepository _itemRepository { get; }
@@ -32,17 +35,17 @@ namespace presentation.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public async Task<ActionResult<List<Item>>> GetAllItem(CancellationToken cancellationToken)
+        public async Task<ApiResult<List<Item>>> GetAllItem(CancellationToken cancellationToken)
         {
             var items = await _itemRepository.TableNoTracking.ToListAsync(cancellationToken);
-            if (items==null)
+            if (items.Count == 0)
                 return Content("آیتمی یافت نشد");
             return items;
         }
 
         [AllowAnonymous]
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Item>> GetItemById(int id, CancellationToken cancellationToken)
+        public async Task<ApiResult<Item>> GetItemById(int id, CancellationToken cancellationToken)
         {
             var item = await _itemRepository.GetByIdAsync(cancellationToken, id);
             if (item == null)
@@ -52,10 +55,16 @@ namespace presentation.Controllers
 
         [PermissionAuthorize(Permissions.Item.AddItem, Admin.admin)]
         [HttpPost]
-        public async Task<ActionResult> AddItem([FromForm] AddItemDto addItemDto, CancellationToken cancellationToken)
+        public async Task<ApiResult> AddItem([FromForm] AddItemDto addItemDto, CancellationToken cancellationToken)
         {
             int cargoId = addItemDto.CargoId;
+            
+            var cargo1 = await _cargoRepository.GetByIdAsync(cancellationToken, cargoId);    
 
+            if(cargo1 == null)
+            {
+                return Content("محموله یافت نشد");
+            }
             var item = new Item()
             {
                 CreateDate = DateTime.Now.ToShamsi(),
@@ -78,12 +87,12 @@ namespace presentation.Controllers
             };
 
             await _cargoRepository.UpdateAsync(cargo, cancellationToken);
-            return Ok("Items Successfully Added");
+            return Ok();
         }
 
         [PermissionAuthorize(Permissions.Item.UpdateItem, Admin.admin)]
         [HttpPut]
-        public async Task<ActionResult> UpdateItem([FromForm] UpdateItemDto updateItemDto, CancellationToken cancellationToken)
+        public async Task<ApiResult> UpdateItem([FromForm] UpdateItemDto updateItemDto, CancellationToken cancellationToken)
         {
             int itemId = updateItemDto.ItemId;
             int cargoId = updateItemDto.CargoId;
@@ -118,7 +127,7 @@ namespace presentation.Controllers
 
         [PermissionAuthorize(Permissions.Item.Delete, Admin.admin)]
         [HttpDelete("{id:int}")]
-        public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken)
+        public async Task<ApiResult> Delete(int id, CancellationToken cancellationToken)
         {
             Item item = await _itemRepository.GetByIdAsync(cancellationToken, id);
             int cargoId = item.CargoId;

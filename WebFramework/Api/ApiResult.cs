@@ -2,11 +2,14 @@
 using Entities.Cargo.ItemValue;
 using Entities.Useres;
 using Microsoft.AspNetCore.Mvc;
+//using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Utility.Api;
 
 namespace WebFramework.Api
 {
@@ -61,6 +64,8 @@ namespace WebFramework.Api
     public class ApiResult<TData> : ApiResult
         where TData : class
     {
+        //[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public TData Data { get; set; }
         public ApiResult(bool isSuccess, ApiResultStatusCode statusCode , TData data , string message = null)
             :base(isSuccess,statusCode,message)

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Utility.Api;
 using WebFramework.Api;
 
 namespace WebFramework.Filters
@@ -55,7 +56,7 @@ namespace WebFramework.Filters
                 context.Result = new JsonResult(apiResult);
             }
             else if (context.Result is ObjectResult objectResult && objectResult.StatusCode == null
-                /*&& !(objectResult.Value is ApiResult)*/)
+                && !(objectResult.Value is ApiResult))
             {
                 var apiResult = new ApiResult<object>(true, ApiResultStatusCode.Success, objectResult.Value);
                 context.Result = new JsonResult(apiResult);

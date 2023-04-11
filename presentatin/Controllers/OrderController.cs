@@ -9,6 +9,8 @@ using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Threading.Tasks.Dataflow;
 using Utility.SwaggerConfig.Permissions;
+using WebFramework.Api;
+using WebFramework.Filters;
 using static Utility.SwaggerConfig.Permissions.Permissions;
 using Order = Entities.Orders.Order;
 
@@ -18,6 +20,7 @@ namespace presentation.Controllers
     [Authorize]
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [ApiResultFilter]
     public class OrderController : ControllerBase
     {
         private readonly IOrderRepository _orderRepository;
@@ -33,18 +36,31 @@ namespace presentation.Controllers
 
         [PermissionAuthorize(Permissions.Order.AddToOrder, Admin.admin)]
         [HttpPost]
-        public async Task<ActionResult> AddToOrder(int CargoId, CancellationToken cancellationToken)
+        public async Task<ApiResult> AddToOrder(int CargoId, CancellationToken cancellationToken)
         {
             string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             int currentUserId1 = Convert.ToInt32(currentUserId);
 
+            var cargo = await _cargoRepository.GetByIdAsync(cancellationToken, CargoId);
 
-            bool task = await _orderRepository.AddToOrder(currentUserId1, CargoId, cancellationToken);
-            if (task == false)
+            if (cargo != null)
             {
-                return Content("مشکلی رخ داده");
+                if (cargo.CargoStatus != Entities.Cargo.CargoStatus.Status.Confirm)
+                {
+                    return Content("محموله تایید نشده است");
+                }
+                else
+                {
+                    bool task = await _orderRepository.AddToOrder(currentUserId1, CargoId, cancellationToken);
+                    if (task == false)
+                    {
+                        return Content("مشکلی رخ داده");
+                    }
+                    return Ok();
+                }
             }
-            return Ok();
+            return NotFound();
+
         }
 
         [PermissionAuthorize(Permissions.Order.ShowOrder, Admin.admin)]
@@ -66,7 +82,7 @@ namespace presentation.Controllers
 
                 foreach (var item in orderDetails)
                 {
-                    var cargo = _cargoRepository.TableNoTracking.SingleOrDefault(o => o.Id == item.Id);
+                    var cargo = _cargoRepository.TableNoTracking.SingleOrDefault(o => o.Id == item.CargoId);
                     OrderList.Add(new ShowListOrderDto()
                     {
                         Count = item.CountCargo,
@@ -82,22 +98,20 @@ namespace presentation.Controllers
 
         [PermissionAuthorize(Permissions.Order.DeleteFromOrder, Admin.admin)]
         [HttpDelete]
-        public async Task<ActionResult> DeleteFromCart(int OrderDetailId, CancellationToken cancellationToken)
+        public async Task<ApiResult> DeleteFromOrder(int OrderDetailId, CancellationToken cancellationToken)
         {
-            OrderDetail orderDetail = await _orderDetailRepository.GetByIdAsync(cancellationToken, OrderDetailId);
-            await _orderDetailRepository.DeleteAsync(orderDetail, cancellationToken);
+
+            await _orderRepository.DeleteFromOrder(OrderDetailId,cancellationToken);
+
             return Content("OrderDetails deleted");
         }
 
         [PermissionAuthorize(Permissions.Order.UpdateOrederDetailInOreder, Admin.admin)]
         [HttpPut]
-        public async Task<ActionResult<OrderDetail>> UpdateOrederDetailInOreder(int orderDetailid, string command, CancellationToken cancellation)
+        public async Task<ApiResult<OrderDetail>> UpdateOrederDetailInOreder(int orderDetailid, string command, CancellationToken cancellation)
         {
             OrderDetail orderDetail = await _orderDetailRepository.ChangeOrderDetailById(orderDetailid, command, cancellation);
-            if (orderDetail == null)
-            {
-                return Content("orderdetails deleted");
-            }
+
             return orderDetail;
         }
 
@@ -105,9 +119,3 @@ namespace presentation.Controllers
 
     }
 }
-
-
-
-
-//    }
-//}

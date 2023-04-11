@@ -34,6 +34,17 @@ namespace Data.Repositories
                         if (orderDetail.CountCargo == 0)
                         {
                             await base.DeleteAsync(orderDetail, cancellationToken);
+
+                            var orderId = orderDetail.OrderId;
+
+                            IEnumerable<OrderDetail> orderDetails = DbContext.Set<OrderDetail>().Where(od => od.OrderId == orderId);
+
+                            var sum = orderDetails.Sum(od => od.CountCargo * od.StarCargo);
+
+                            Order order = await DbContext.Set<Order>().Where(o=>o.Id == orderId).FirstOrDefaultAsync();
+                            order.OrderStar = sum;
+                            DbContext.Update(order);
+                            await DbContext.SaveChangesAsync();
                             return null ;
 
                         }

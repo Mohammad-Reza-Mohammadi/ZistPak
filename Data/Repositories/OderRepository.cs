@@ -5,6 +5,7 @@ using Entities.Orders;
 using Entities.Useres;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,9 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static Utility.SwaggerConfig.Permissions.Permissions;
+using Cargo = Entities.Cargo.Cargo;
+using Order = Entities.Orders.Order;
 
 namespace Data.Repositories
 {
@@ -28,7 +32,7 @@ namespace Data.Repositories
 
         public async Task<bool> AddToOrder(int currentUserId, int cargoId, CancellationToken cancellationToken)
         {
-            Order order = await Table.Where(o => o.Id == currentUserId && o.IsFinaly == false).SingleOrDefaultAsync(cancellationToken);
+            Order order = await Table.Where(o => o.UserId == currentUserId && o.IsFinaly == false).SingleOrDefaultAsync(cancellationToken);
 
             if (order == null)
             {
@@ -89,12 +93,12 @@ namespace Data.Repositories
         async Task UpdateSum(int orderId, CancellationToken cancellationToken)
         {
             Order order = await base.GetByIdAsync(cancellationToken, orderId);
-            OrderDetail orderDetail = await _orderDetailRepository.GetByIdAsync(cancellationToken, orderId);
+            OrderDetail orderDetail = await DbContext.Set<OrderDetail>().Where(od=>od.OrderId == orderId).SingleOrDefaultAsync();
 
-            int count = orderDetail.CountCargo;
+            int countCargoInOrderdetail = orderDetail.CountCargo;
             decimal starCargo = orderDetail.StarCargo;
 
-            var sum = count * starCargo;
+            var sum = countCargoInOrderdetail * starCargo;
 
             order.OrderStar = sum;
             DbContext.Update(order);
@@ -117,6 +121,19 @@ namespace Data.Repositories
         {
             OrderDetail orderDetail = await _orderDetailRepository.GetByIdAsync(cancellationToken, OrderDeratilsId);
             DbContext.Set<OrderDetail>().Remove(orderDetail);
+            await DbContext.SaveChangesAsync();
+
+            var orderId = orderDetail.OrderId;
+
+            IEnumerable<OrderDetail> orderDetails = DbContext.Set<OrderDetail>().Where(od => od.OrderId == orderId);
+
+            var sum = orderDetails.Sum(od => od.CountCargo * od.StarCargo);
+
+            Order order = await base.GetByIdAsync(cancellationToken, orderId);
+            order.OrderStar = sum;
+            DbContext.Update(order);
+            await DbContext.SaveChangesAsync();
+
             return true;
         }
     }
