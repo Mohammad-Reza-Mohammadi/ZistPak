@@ -6,10 +6,13 @@ using Entities.User.UserProprety.EnumProperty;
 using Entities.Useres;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 using presentation.Models;
+using Services.Services;
 using System.Drawing;
 using System.Net.Mime;
 using System.Security.Claims;
@@ -22,7 +25,6 @@ using User = Entities.Useres.User;
 
 namespace presentation.Controllers
 {
-    [Authorize]
     [Route("api/[controller]/[action]")]
     [ApiResultFilter]
     #region ApiResultFilter
@@ -34,14 +36,25 @@ namespace presentation.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IJwtSevice _jwtSevice;
+        private readonly UserManager<User> userManager;
+        private readonly RoleManager<Role> roleManager;
+        private readonly SignInManager<User> signInManager;
 
-        public UserController(IUserRepository userRepository)
+        public UserController(IUserRepository userRepository,IJwtSevice jwtSevice,UserManager<User> userManager, RoleManager<Role> roleManager,
+            SignInManager<User> signInManager)
         {
             this._userRepository = userRepository;
+            this._jwtSevice = jwtSevice;
+            this.userManager = userManager;
+            this.roleManager = roleManager;
+            this.signInManager = signInManager;
         }
 
 
-        [PermissionAuthorize(Permissions.User.GetAll, Admin.admin)]
+        //[PermissionAuthorize(Permissions.User.GetAll, Admin.admin)]
+        //[AllowAnonymous]
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult<List<User>>> GetAll(CancellationToken cancellationToken)
         {
@@ -53,32 +66,42 @@ namespace presentation.Controllers
             return Ok(users);
         }
 
-        [PermissionAuthorize(Permissions.User.GetUserById, Admin.admin)]
+        //[PermissionAuthorize(Permissions.User.GetUserById, Admin.admin)]
+        [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<ApiResult<User>> GetUserById(int id, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetByIdAsync(cancellationToken, id);
-            if (user == null)
-                return NotFound(user);
-            return user;
+            var user2 = await userManager.FindByIdAsync(id.ToString());
+            var role = await roleManager.FindByNameAsync("Admin");
+            //var user = await _userRepository.GetByIdAsync(cancellationToken, id);
+            //if (user == null)
+            //    return NotFound(user);
+            return user2;
 
         }
-
    
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<ApiResult<User>> Login(string FirstName, string password, CancellationToken cancellationToken)
+        public async Task<ApiResult<string>> Login(string userName, string password, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.Login(FirstName, password, cancellationToken);
+            //var user = await _userRepository.Login(userName, password, cancellationToken);
+            var user = await userManager.FindByNameAsync(userName);
             if (user == null)
-                return Content("کاربر یافت نشد !");
-            return Ok(user);
+                throw new BadRequestException("نام کاربری اشتباه است");
+            var passwordIsValid = await userManager.CheckPasswordAsync(user, password);
+            if (!passwordIsValid)
+                return Content(" رمز عبور اشتباه است");
+            var userWithToken =await _jwtSevice.GenerateAsync(user,cancellationToken);
+            return Ok(userWithToken);
         }
+
+
+
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<ApiResult<User>> SuignUp(SignupUserDto signupUserDto, CancellationToken cancellationToken)
+        public async Task<ApiResult<User>> SuignUp([FromForm]SignupUserDto signupUserDto, CancellationToken cancellationToken)
         {
             var user = new User()
             {
@@ -86,22 +109,42 @@ namespace presentation.Controllers
                 UserPhoneNumber = signupUserDto.phoneNumber,
                 UserAge = signupUserDto.Age,
                 UserGender = signupUserDto.Gender,
-                UserRole = signupUserDto.Role,
+                Email = signupUserDto.Email,
+                CreateDate = DateTime.Now.ToShamsi(),
             };
-            var parentEployeeId = signupUserDto.ParetnEmployeeId;
-            if (parentEployeeId == null)
-            {
-                await _userRepository.AddUserAsync(user, signupUserDto.Password, cancellationToken);
-            }
-            else
-            {
-                user.UserParetnEmployeeId = signupUserDto.ParetnEmployeeId;
-                await _userRepository.AddUserAsync(user, signupUserDto.Password, cancellationToken);
-            }
+            var result = await userManager.CreateAsync(user ,signupUserDto.Password);
 
-            return Content($"{signupUserDto.UserName}: عزیز به وبسایت ما خوش آمدید");
+            var result2 = await roleManager.CreateAsync(new Role
+            {
+                Name = "Admin",
+                Description = "admin role"
+            });
 
+            var result3 = await userManager.AddToRoleAsync(user, "Admin");
+            return user;
+
+            #region
+            //var parentEployeeId = signupUserDto.ParetnEmployeeId;
+            //if (parentEployeeId == null)
+            //{
+            //    await _userRepository.AddUserAsync(user, signupUserDto.Password, cancellationToken);
+            //}
+            //else
+            //{
+            //    user.UserParetnEmployeeId = signupUserDto.ParetnEmployeeId;
+            //    await _userRepository.AddUserAsync(user, signupUserDto.Password, cancellationToken);
+            //}
+
+            //return Content($"{signupUserDto.UserName}: عزیز به وبسایت ما خوش آمدید");
+
+            #endregion
         }
+
+
+
+
+
+
 
         [ApiResultFilter]
         [HttpPut]
@@ -133,7 +176,7 @@ namespace presentation.Controllers
             return Ok();
         }
 
-        [PermissionAuthorize(Permissions.User.Delete, Admin.admin)]
+        //[PermissionAuthorize(Permissions.User.Delete, Admin.admin)]
         [HttpDelete("{id:int}")]
         public async Task<ApiResult> Delete(int id, CancellationToken cancellationToken)
         {
@@ -144,7 +187,7 @@ namespace presentation.Controllers
             return Content($"{user.UserName} باموفقیت حذف شد");
         }
 
-        [PermissionAuthorize(Permissions.User.AddSoperviserPermissionById, Admin.admin)]
+        //[PermissionAuthorize(Permissions.User.AddSoperviserPermissionById, Admin.admin)]
         [HttpPost]
         public async Task<ApiResult> AddSoperviserPermissionById(int Id, CancellationToken cancellationToken)
         {
@@ -159,7 +202,7 @@ namespace presentation.Controllers
 
         }
 
-        [PermissionAuthorize(Permissions.User.AddAllSoperviserPermission, Admin.admin)]
+        //[PermissionAuthorize(Permissions.User.AddAllSoperviserPermission, Admin.admin)]
         [HttpPost]
         public async Task<ActionResult> AddAllSoperviserPermission(CancellationToken cancellationToken)
         {

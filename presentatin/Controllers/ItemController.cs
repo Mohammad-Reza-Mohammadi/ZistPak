@@ -53,7 +53,7 @@ namespace presentation.Controllers
             return item;
         }
 
-        [PermissionAuthorize(Permissions.Item.AddItem, Admin.admin)]
+        //[PermissionAuthorize(Permissions.Item.AddItem, Admin.admin)]
         [HttpPost]
         public async Task<ApiResult> AddItem([FromForm] AddItemDto addItemDto, CancellationToken cancellationToken)
         {
@@ -90,7 +90,7 @@ namespace presentation.Controllers
             return Ok();
         }
 
-        [PermissionAuthorize(Permissions.Item.UpdateItem, Admin.admin)]
+        //[PermissionAuthorize(Permissions.Item.UpdateItem, Admin.admin)]
         [HttpPut]
         public async Task<ApiResult> UpdateItem([FromForm] UpdateItemDto updateItemDto, CancellationToken cancellationToken)
         {
@@ -125,7 +125,7 @@ namespace presentation.Controllers
             return Ok();
         }
 
-        [PermissionAuthorize(Permissions.Item.Delete, Admin.admin)]
+        //[PermissionAuthorize(Permissions.Item.Delete, Admin.admin)]
         [HttpDelete("{id:int}")]
         public async Task<ApiResult> Delete(int id, CancellationToken cancellationToken)
         {

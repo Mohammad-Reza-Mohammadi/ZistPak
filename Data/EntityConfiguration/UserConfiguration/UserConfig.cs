@@ -24,7 +24,7 @@ namespace Data.EntityConfiguration.UserConfiguration
             #endregion
 
             #region Other Property
-            builder.Property(c => c.UserPasswordHash).IsRequired();
+            builder.Property(c => c.PasswordHash).IsRequired();
             builder.Property(c => c.UserName).IsRequired();
             builder.Property(c => c.UserAge).IsRequired();
             builder.Property(c => c.UserPhoneNumber).IsRequired(false);
@@ -34,7 +34,7 @@ namespace Data.EntityConfiguration.UserConfiguration
             builder.Property(c => c.UserToken).IsRequired(false);
             builder.Property(c => c.UserIsActive).IsRequired();
             builder.Property(c => c.UserGender).IsRequired();
-            builder.Property(c => c.UserRole).IsRequired();
+            //builder.Property(c => c.UserRole).IsRequired();
             
             #endregion
 

@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace Utility.SwaggerConfig.Permissions
 {
-    public class PermissionAuthorizeAttribute : AuthorizeAttribute
-    {
-        internal const string PolicyPrefix = "PERMISSION:";
-        public PermissionAuthorizeAttribute(params string[] permissions)
-        {
-            Policy = $"{PolicyPrefix}{string.Join(",", permissions)}";
-        }
-    }
+    //public class PermissionAuthorizeAttribute : AuthorizeAttribute
+    //{
+    //    internal const string PolicyPrefix = "PERMISSION:";
+    //    public PermissionAuthorizeAttribute(params string[] permissions)
+    //    {
+    //        Policy = $"{PolicyPrefix}{string.Join(",", permissions)}";
+    //    }
+    //}
 }

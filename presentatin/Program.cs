@@ -3,25 +3,29 @@ using Data.Contracts;
 using Data.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.VisualBasic;
+using Services.Services;
 using Utility.SwaggerConfig;
 using Utility.SwaggerConfig.Permissions;
+using WebFramework.Configuratoin;
 using WebFramework.MiddleWares;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// گرفتن secret key از appstteing.json
-var AppSettingSections = builder.Configuration.GetSection("AppSettings");
+var AppSettingSections = builder.Configuration.GetSection(nameof(AppSettings));
 builder.Services.Configure<Utility.SwaggerConfig.AppSettings>(AppSettingSections);
-var secret = AppSettingSections.Get<AppSettings>();
+var appSettings = AppSettingSections.Get<AppSettings>();
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOurAuthentication(secret);
+builder.Services.AddJwtAuthentication(appSettings.JwtSettings);
 builder.Services.AddOurSwagger();
+
+builder.Services.AddCustomIdentity(appSettings.IdentitySettings);
 
 builder.Services.AddDbContext<ZPakContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("ZPakServer")));
@@ -32,8 +36,9 @@ builder.Services.AddScoped<ICargoRepository , CargoRepository>();
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IOrderRepository, OderRepository>();
 builder.Services.AddScoped<IOrderDetailRepository , OrderDetailRepository>();
+builder.Services.AddScoped<IJwtSevice, JwtSevice>();
 
-builder.Services.AddSingleton<IAuthorizationPolicyProvider, AuthorizationPolicyProvider>();
+//builder.Services.AddSingleton<IAuthorizationPolicyProvider, AuthorizationPolicyProvider>();
 
 
 var app = builder.Build();
@@ -49,8 +54,8 @@ if (app.Environment.IsDevelopment())
 else
 {
     //app.UseExceptionHandler("/Error");
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    //app.UseSwagger();
+    //app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

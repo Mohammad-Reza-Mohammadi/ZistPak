@@ -9,6 +9,7 @@ namespace presentation.Models
     //که مربوط به دیتابیس نیست، با استفاده از متدی از ان که در پایین ایمپلیمنت کردیم
     {
         public string UserName { get; set; }
+        public string Email { get; set; }
         public string Password { get; set; }
         public string phoneNumber { get; set; }
         public int Age { get; set; }

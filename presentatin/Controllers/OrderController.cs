@@ -34,7 +34,7 @@ namespace presentation.Controllers
             this._orderDetailRepository = orderDetailRepository;
         }
 
-        [PermissionAuthorize(Permissions.Order.AddToOrder, Admin.admin)]
+        //[PermissionAuthorize(Permissions.Order.AddToOrder, Admin.admin)]
         [HttpPost]
         public async Task<ApiResult> AddToOrder(int CargoId, CancellationToken cancellationToken)
         {
@@ -63,7 +63,7 @@ namespace presentation.Controllers
 
         }
 
-        [PermissionAuthorize(Permissions.Order.ShowOrder, Admin.admin)]
+        //[PermissionAuthorize(Permissions.Order.ShowOrder, Admin.admin)]
         [HttpGet]
         public async Task<List<ShowListOrderDto>> ShowOrder(CancellationToken cancellationToken)
         {
@@ -96,7 +96,7 @@ namespace presentation.Controllers
             return OrderList;
         }
 
-        [PermissionAuthorize(Permissions.Order.DeleteFromOrder, Admin.admin)]
+        //[PermissionAuthorize(Permissions.Order.DeleteFromOrder, Admin.admin)]
         [HttpDelete]
         public async Task<ApiResult> DeleteFromOrder(int OrderDetailId, CancellationToken cancellationToken)
         {
@@ -106,7 +106,7 @@ namespace presentation.Controllers
             return Content("OrderDetails deleted");
         }
 
-        [PermissionAuthorize(Permissions.Order.UpdateOrederDetailInOreder, Admin.admin)]
+        //[PermissionAuthorize(Permissions.Order.UpdateOrederDetailInOreder, Admin.admin)]
         [HttpPut]
         public async Task<ApiResult<OrderDetail>> UpdateOrederDetailInOreder(int orderDetailid, string command, CancellationToken cancellation)
         {

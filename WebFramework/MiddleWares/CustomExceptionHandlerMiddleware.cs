@@ -95,7 +95,7 @@ namespace WebFramework.MiddleWares
                 await WriteToResponseAsync();
             }
             catch (Exception exception)
-             {
+            {
                 _logger.LogError(exception, exception.Message);
 
                 if (_env.IsDevelopment())

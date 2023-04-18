@@ -54,7 +54,7 @@ namespace presentation.Controllers
             return cargo;
         }
 
-        [PermissionAuthorize(Permissions.Cargo.AddCargo, Admin.admin)]
+        //[PermissionAuthorize(Permissions.Cargo.AddCargo, Admin.admin)]
         [HttpPost]
         public async Task<ApiResult> AddCargo(CargoDto cargoDto, CancellationToken cancellationToken)
         {
@@ -104,7 +104,7 @@ namespace presentation.Controllers
             #endregion
         }
 
-        [PermissionAuthorize(Permissions.Cargo.UpdateCargo, Admin.admin)]
+        //[PermissionAuthorize(Permissions.Cargo.UpdateCargo, Admin.admin)]
         [HttpPut]
         public async Task<ApiResult> UpdateCargo(UpdateCargoDto updateCargoDto, CancellationToken cancellationToken)
         {
@@ -126,7 +126,7 @@ namespace presentation.Controllers
             return Content("محموله با موفقیت به روز رسانی شد");
         }
 
-        [PermissionAuthorize(Permissions.Cargo.DeleteCargo, Admin.admin)]
+        //[PermissionAuthorize(Permissions.Cargo.DeleteCargo, Admin.admin)]
         [HttpDelete("{id:int}")]
         public async Task<ApiResult> DeleteCargo(int id, CancellationToken cancellationToken)
         {

@@ -9,22 +9,22 @@ using System.Threading.Tasks;
 
 namespace Data.EntityConfiguration.UserConfiguration
 {
-    public class UserPermissions : IEntityTypeConfiguration<UPermissions>
-    {
-        public void Configure(EntityTypeBuilder<UPermissions> builder)
-        {
-            //key
-            builder.HasKey(x => x.Id);
+    //public class UserPermissions : IEntityTypeConfiguration<UPermissions>
+    //{
+    //    public void Configure(EntityTypeBuilder<UPermissions> builder)
+    //    {
+    //        //key
+    //        builder.HasKey(x => x.Id);
 
-            builder.Property(c => c.Permission).IsRequired();
+    //        builder.Property(c => c.Permission).IsRequired();
 
-            #region navigtion Property
-            builder.HasOne(c=>c.user)
-                .WithMany(c=>c.UserPermissions)
-                .HasForeignKey(c => c.userId)
-                .OnDelete(DeleteBehavior.Cascade);
-            #endregion
-        }
+    //        #region navigtion Property
+    //        builder.HasOne(c=>c.user)
+    //            .WithMany(c=>c.UserPermissions)
+    //            .HasForeignKey(c => c.userId)
+    //            .OnDelete(DeleteBehavior.Cascade);
+    //        #endregion
+    //    }
 
-    }
+    //}
 }

@@ -1,6 +1,8 @@
 ﻿using Data.EntityConfiguration;
 using Entities.BaseEntityFolder;
 using Entities.Cargo;
+using Entities.Useres;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,7 +13,8 @@ using Utility.Utility;
 
 namespace Data
 {
-    public class ZPakContext : DbContext
+    public class ZPakContext : IdentityDbContext<User,Role,int>
+        //DbContext
     {
         #region ctor discription
         //اگر کانکشن استرینگ را در قستمت سرویس ها اضاف کردیم حتما باید سازنده پایین را صدا بزنیم  که 
