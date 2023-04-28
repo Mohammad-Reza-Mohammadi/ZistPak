@@ -4,311 +4,227 @@ using Entities.User.Owned;
 using Entities.User.UserProprety.EnumProperty;
 using Entities.Useres;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.CodeAnalysis.Options;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.Dynamic;
-using System.IdentityModel.Tokens.Jwt;
+using presentation.Models;
 using System.Security.Claims;
-using System.Text;
 using Utility.Exceptions;
 using Utility.SwaggerConfig;
-using Utility.SwaggerConfig.Permissions;
 using Utility.Utility;
+using User = Entities.Useres.User;
 
 namespace Data.Repositories
 {
     public class UserRepository : Repository<User>, IUserRepository
     {
         private readonly AppSettings _appSettings;
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<Role> _roleManager;
 
-        
-
-        public UserRepository(ZPakContext dbContext, IOptions<AppSettings> appSettings)
+        public UserRepository(ZPakContext dbContext, IOptions<AppSettings> appSettings, UserManager<User> userManager, RoleManager<Role> roleManager)
             : base(dbContext)
         {
             _appSettings = appSettings.Value;
-           
+            this._userManager = userManager;
+            this._roleManager = roleManager;
         }
 
         public async Task<Address> Getaddress(int userId)
         {
             return await DbContext.Set<Address>().Where(u => u.UserAddressOwnerId == userId).SingleOrDefaultAsync(); ;
         }
+
         public async Task<bool> GetUserByName(string userName)
         {
-           User user = await DbContext.Set<User>().Where(u => u.UserName == userName).SingleOrDefaultAsync();
+            User user = await DbContext.Set<User>().Where(u => u.UserName == userName).SingleOrDefaultAsync();
             if (user == null)
                 return false;
             return true;
         }
 
-        public async Task AddUserAsync(User user, string password, CancellationToken cancellationToken)
+        public async Task<bool> AddUserAsync(SignupUserDto signupUserDto, CancellationToken cancellationToken)
         {
-            var exists = await TableNoTracking.AnyAsync(p => p.UserName == user.UserName);
+            var exists = await TableNoTracking.AnyAsync(p => p.UserName == signupUserDto.UserName);
 
             if (exists)
             {
                 throw new BadRequestException("نام کاربری تکراری است");
             }
+            var user = new User
+            {
+                UserName = signupUserDto.UserName,
+                Email = signupUserDto.Email,
+                PhoneNumber = signupUserDto.phoneNumber,
+                UserAge = signupUserDto.Age,
+                UserGender = signupUserDto.Gender,
+                CreateDate = DateTime.Today.ToShamsi(),
+                SecurityStamp = Guid.NewGuid().ToString()
 
+            };
 
-            var passswordHash = SecurityHelper.GetSha256Hash(password);
-            user.PasswordHash = passswordHash;
+            switch (signupUserDto.Role)
+            {
+                case UserRole.Admin:
+                    {
+                        var musnicipalityRole = new Role
+                        {
+                            Name = signupUserDto.Role.ToString(),
+                            Description = "This is Admin Role",
+                        };
+                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
+                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
 
-            //به طور پیش فرض افراد فقط میتوانند به کنترلر هایی دسترسی داشته باشند که فقط نیاز به لاگین دارد
-            // give permission
-            //switch (user.UserRole)
-            //{
-            //    case UserRole.Municipality:
-            //        {
-            //            User user1 = new User()
-            //            {
-            //                CreateDate = DateTime.Today.ToShamsi(),
-            //                PasswordHash = user.PasswordHash,
-            //                UserName = user.UserName,
-            //                UserAge = user.UserAge,
-            //                UserGender = user.UserGender,
-            //                UserRole = user.UserRole,
-            //                //به طور پیش فرض ناظر نمیتواند محموله ای را تغییر دهد باید شهرداری مجوز را بدهد
-            //                #region add permissons
-            //                //UserPermissions = new List<UPermissions>
-            //                //{
-            //                //    new UPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.User.AddAllSoperviserPermission",
-            //                //    },
-            //                //    new UPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.User.AddSoperviserPermissionById"
-            //                //    }
-            //                //}
-            //                #endregion
-            //            };
+                        var claimList = new List<Claim>
+                        {
+                            new Claim("GetAllUser", "true"),
+                            new Claim("GetUserById", "true"),
+                        };
+                        var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                        break;
+                    }
+                case UserRole.Municipality:
+                    {
+                        user.UserIsActive = false;
+                        var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                        var musnicipalityRole = new Role
+                        {
+                            Name = signupUserDto.Role.ToString(),
+                            Description = "This is Municipality Role",                            
+                        };
+                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
+                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
 
-            //            await base.AddAsync(user1, cancellationToken);
-            //            break;
-            //        }
-            //    case UserRole.Supervisor:
-            //        {
-            //            User user1 = new User()
-            //            {
-            //                CreateDate = DateTime.Today.ToShamsi(),
-            //                PasswordHash = user.PasswordHash,
-            //                UserName = user.UserName,
-            //                UserAge = user.UserAge,
-            //                UserGender = user.UserGender,
-            //                UserRole = user.UserRole,
-            //                //به طور پیش فرض ناظر نمیتواند محموله ای را تغییر دهد باید شهرداری مجوز را بدهد
-            //                #region add permissons
-            //                //permissions = new List<UserPermissions>
-            //                //{
-            //                //    new UserPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.Cargo.UpdateCargo",
-            //                //    },
-            //                //    new UserPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.Cargo.DeleteCargo"
-            //                //    }
-            //                //}
-            //                #endregion
-            //            };
-            //            var UserParetnEmployeeId1 = user.UserParetnEmployeeId;
-            //            if (UserParetnEmployeeId1 != null)
-            //            {
-            //                user1.UserParetnEmployeeId = UserParetnEmployeeId1;
-            //            }
+                        //var claimList = new List<Claim>
+                        //{
+                        //    new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
 
-            //            await base.AddAsync(user1, cancellationToken);
-            //            break;
-            //        }
-            //    case UserRole.Contractor:
-            //        {
-            //            User user1 = new User()
-            //            {
-            //                CreateDate = DateTime.Today.ToShamsi(),
-            //                PasswordHash = user.PasswordHash,
-            //                UserName = user.UserName,
-            //                UserAge = user.UserAge,
-            //                UserGender = user.UserGender,
-            //                UserRole = user.UserRole,
-            //                // طبق سناریو این کاربر هم فقط میتواند فقط به قسمت هایی که نیاز به لاگین دارد دسترسی داشته باشد
-            //                #region add permissons
-            //                //permissions = new List<UserPermissions>
-            //                //{
-            //                //    new UserPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.User.GetAll"
-            //                //    }
-            //                //}
-            //                #endregion
-            //            };
-            //            var UserParetnEmployeeId1 = user.UserParetnEmployeeId;
-            //            if (UserParetnEmployeeId1 != null)
-            //            {
-            //                user1.UserParetnEmployeeId = UserParetnEmployeeId1;
-            //            }
-            //            await base.AddAsync(user1, cancellationToken);
-            //            break;
-            //        }
-            //    case UserRole.ExhibitorEmployee:
-            //        {
-            //            User user1 = new User()
-            //            {
-            //                CreateDate = DateTime.Today.ToShamsi(),
-            //                PasswordHash = user.PasswordHash,
-            //                UserName = user.UserName,
-            //                UserAge = user.UserAge,
-            //                UserGender = user.UserGender,
-            //                UserRole = user.UserRole,
-            //                //UserPermissions = new List<UPermissions>
-            //                //{
-            //                //    new UPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.Item.AddItem",
+                        //};
+                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                        break;
+                    }
+                case UserRole.Supervisor:
+                    {
+                        user.UserIsActive = false;
+                        var result = await _userManager.CreateAsync(user, signupUserDto.Password);
 
-            //                //    },
-            //                //    new UPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.Item.UpdateItem",
-            //                //    }
-            //                //}
-            //            };
-            //            var UserParetnEmployeeId1 = user.UserParetnEmployeeId;
-            //            if (UserParetnEmployeeId1 != null)
-            //            {
-            //                user1.UserParetnEmployeeId = UserParetnEmployeeId1;
-            //            }
-            //            await base.AddAsync(user1, cancellationToken);
-            //            break;
-            //        }
-            //    case UserRole.CarEmployee:
-            //        {
-            //            User user1 = new User()
-            //            {
-            //                CreateDate = DateTime.Today.ToShamsi(),
-            //                PasswordHash = user.PasswordHash,
-            //                UserName = user.UserName,
-            //                UserAge = user.UserAge,
-            //                UserGender = user.UserGender,
-            //                UserRole = user.UserRole,
-            //                // به دلیل ندانستن کار اصلی این کاربر یک مجوز دلخواه داده شده
-            //                //UserPermissions = new List<UPermissions>
-            //                //{
-            //                //    new UPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.Item.AddItem"
-            //                //    }
-            //                //}
-            //            };
-            //            var UserParetnEmployeeId1 = user.UserParetnEmployeeId;
-            //            if (UserParetnEmployeeId1 != null)
-            //            {
-            //                user1.UserParetnEmployeeId = UserParetnEmployeeId1;
-            //            }
-            //            await base.AddAsync(user1, cancellationToken);
-            //            break;
-            //        }
-            //    case UserRole.Customer:
-            //        {
-            //            User user1 = new User()
-            //            {
-            //                CreateDate = DateTime.Today.ToShamsi(),
-            //                PasswordHash = user.PasswordHash,
-            //                UserName = user.UserName,
-            //                UserAge = user.UserAge,
-            //                UserGender = user.UserGender,
-            //                UserRole = user.UserRole,
-            //                //UserPermissions = new List<UPermissions>
-            //                //{
-            //                //    new UPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.Order.AddToOrder"
-            //                //    },
-            //                //    new UPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.Order.DeleteFromOrder"
-            //                //    },
-            //                //    new UPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.Order.ShowOrder"
-            //                //    },
-            //                //    new UPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.Order.UpdateOrederDetailInOreder"
-            //                //    },
-            //                //}
-            //            };
+                        var musnicipalityRole = new Role
+                        {
+                            Name = signupUserDto.Role.ToString(),
+                            Description = "This is Supervisor Role",
+                        };
+                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
+                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
 
-            //            await base.AddAsync(user1, cancellationToken);
-            //            break;
-            //        }
-            //    case UserRole.Admin:
-            //        {
-            //            User user1 = new User()
-            //            {
-            //                CreateDate = DateTime.Today.ToShamsi(),
-            //                PasswordHash = user.PasswordHash,
-            //                UserName = user.UserName,
-            //                UserAge = user.UserAge,
-            //                UserGender = user.UserGender,
-            //                UserRole = user.UserRole,
-            //                //UserPermissions = new List<UPermissions>
-            //                //{
-            //                //    new UPermissions()
-            //                //    {
-            //                //        Permission = "Permissions.Admin.admin"
-            //                //    },
-            //                //}
-            //            };
-            //            await base.AddAsync(user1, cancellationToken);
-            //            break;
-            //        }
-            //}
-            return;
-        }
+                        //var claimList = new List<Claim>
+                        //{
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //};
+                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                        break;
+                    }
+                case UserRole.Contractor:
+                    {
+                        user.UserIsActive = false;
+                        var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                        var musnicipalityRole = new Role
+                        {
+                            Name = signupUserDto.Role.ToString(),
+                            Description = "This is Contractor Role",
+                        };
+                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
+                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
 
-        public async Task<User> Login(string firstName, string password, CancellationToken cancellationToken)
-        {
-            var passswordHash = SecurityHelper.GetSha256Hash(password);
-            var user = await Table.Where(u => u.UserName == firstName && u.PasswordHash == passswordHash).SingleOrDefaultAsync();
-            return user;
+                        //var claimList = new List<Claim>
+                        //{
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //};
+                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                        break;
+                    }
+                case UserRole.ExhibitorEmployee:
+                    {
+                        user.UserIsActive = false;
+                        var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                        var musnicipalityRole = new Role
+                        {
+                            Name = signupUserDto.Role.ToString(),
+                            Description = "This is ExhibitorEmployee Role",
+                        };
+                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
+                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
 
+                        //var claimList = new List<Claim>
+                        //{
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //};
+                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                        break;
+                    }
+                case UserRole.CarEmployee:
+                    {
+                        user.UserIsActive = false;
+                        var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                        var musnicipalityRole = new Role
+                        {
+                            Name = signupUserDto.Role.ToString(),
+                            Description = "This is CarEmployee Role",
+                        };
+                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
+                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
 
+                        //var claimList = new List<Claim>
+                        //{
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //};
+                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                        break;
+                    }
+                case UserRole.Customer:
+                    {
+                        var musnicipalityRole = new Role
+                        {
+                            Name = signupUserDto.Role.ToString(),
+                            Description = "This is Customer Role",
+                        };
+                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
+                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
 
-            //var useId = user.Id;
-
-            //var ListPermissions = await DbContext.Set<UPermissions>().Where(u => u.userId == useId).ToListAsync();
-
-            //// authenticaiton successfo so generate jwt token
-            //var tokenHandler = new JwtSecurityTokenHandler();
-            ////var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
-            //var claims = new ClaimsIdentity();
-
-            //foreach (var permisson in ListPermissions)
-            //{
-            //    claims.AddClaims(new[]{
-            //        new Claim(Permissions.Permission,permisson.Permission.ToString()),
-            //        new Claim(ClaimTypes.NameIdentifier,user.Id.ToString()),
-            //        }); ;
-
-            //}
-            //var tokenDescriptor = new SecurityTokenDescriptor
-            //{
-            //    Subject = claims,
-            //    Expires = DateTime.UtcNow.AddDays(7),
-            //    //SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            //};
-            //var token = tokenHandler.CreateToken(tokenDescriptor);
-            //user.UserToken = tokenHandler.WriteToken(token);
-
-            ////The password will not be returned
-            //user.UserPasswordHash = null;
-            //user.UserPermissions = null;
-            //return user;
+                        //var claimList = new List<Claim>
+                        //{
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //    //new Claim("CanModifyCargo", "true"),
+                        //};
+                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                        break;
+                    }
+            }
+            return true;
         }
 
         public async Task UpdateUserAsync(User user, int userId, IFormFile userImageFile, CancellationToken cancellationToken)
@@ -322,65 +238,62 @@ namespace Data.Repositories
 
         public async Task<bool> ChangePermissinByID(int id, CancellationToken cancellationToken)
         {
-            return true;
-            User User = await DbContext.Set<User>().Where(u => u.Id == id).SingleOrDefaultAsync(cancellationToken);
-            //var UserRole = User.UserRole;
-            //if (UserRole != UserRole.Supervisor)
-            //{
-            //    return false;
-            //}
-            //User.UserPermissions = new List<UPermissions>
-            //{
-            //    new UPermissions()
-            //    {
-            //        userId = id,
-            //        Permission = "Permissions.Cargo.AddCargo"
-            //    },
-            //    new UPermissions()
-            //    {
-            //        userId = id,
-            //        Permission = "Permissions.Cargo.UpdateCargo"
-            //    },
-            //    new UPermissions()
-            //    {
-            //        userId = id,
-            //        Permission = "Permissions.Cargo.DeleteCargo"
-            //    },
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                return false;
+            }
 
-            //};
+            if (await _userManager.IsInRoleAsync(user, "Supervisor"))
+            {
+                var claimList = new List<Claim>
+                {
+                    //ItemClaim
+                    new Claim("AddItem", "true"),
+                    new Claim("UpdateItem", "true"),
+                    new Claim("DeleteItem", "true"),
+                    //CargoClaim
+                    new Claim("AddCargo", "true"),
+                    new Claim("UpdateCargo", "true"),
+                    new Claim("UpdateCargo", "true"),
+                };
+                var result = await _userManager.AddClaimsAsync(user, claimList);
+                if (!result.Succeeded)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public async Task AllSupervisorChangePermissin(CancellationToken cancellationToken)
         {
 
-            //List<User> users = await DbContext.Set<User>().Where(u => u.UserRole == UserRole.Supervisor).ToListAsync();
+            var supervisors = await _userManager.GetUsersInRoleAsync("Supervisor");
 
-            //foreach (var user in users)
-            //{
-            //    List<UPermissions> addPermission = new List<UPermissions>
-            //    {
-            //        new UPermissions()
-            //        {
-            //            userId = user.Id,
-            //            Permission = "Permissions.Cargo.AddCargo",
-            //        },
-            //        new UPermissions()
-            //        {
-            //            userId = user.Id,
-            //            Permission = "Permissions.Cargo.UpdateCargo"
-            //        },
-            //        new UPermissions()
-            //        {
-            //            userId = user.Id,
-            //            Permission = "Permissions.Cargo.DeleteCargo"
-            //        },
-            //    };
+            foreach (var supervisor in supervisors)
+            {
+                var claimList = new List<Claim>
+                {
+                    //ItemClaim
+                    new Claim("AddItem", "true"),
+                    new Claim("UpdateItem", "true"),
+                    new Claim("DeleteItem", "true"),
+                    //CargoClaim
+                    new Claim("AddCargo", "true"),
+                    new Claim("UpdateCargo", "true"),
+                    new Claim("UpdateCargo", "true"),
 
-            //    await DbContext.Set<UPermissions>().AddRangeAsync(addPermission, cancellationToken);
-            //    await DbContext.SaveChangesAsync();
-            //}
+                };
+                var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(supervisor, claimList);
+            }
+        }
 
-
+        public Task UpdateLastLoginDateAsync(User user, CancellationToken cancellationToken)
+        {
+            user.LastLoginDate = DateTime.Now.ToShamsi();
+            return UpdateAsync(user, cancellationToken);
         }
     }
 }

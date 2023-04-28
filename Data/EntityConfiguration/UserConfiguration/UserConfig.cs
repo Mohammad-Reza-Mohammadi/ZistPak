@@ -27,8 +27,8 @@ namespace Data.EntityConfiguration.UserConfiguration
             builder.Property(c => c.PasswordHash).IsRequired();
             builder.Property(c => c.UserName).IsRequired();
             builder.Property(c => c.UserAge).IsRequired();
-            builder.Property(c => c.UserPhoneNumber).IsRequired(false);
-            builder.Property(c => c.UserEmail).IsRequired(false);
+            builder.Property(c => c.PhoneNumber).IsRequired(false);
+            builder.Property(c => c.Email).IsRequired(false);
             builder.Property(c => c.UserImage).IsRequired(false);
             builder.Property(c => c.UserStar).IsRequired();
             builder.Property(c => c.UserToken).IsRequired(false);

@@ -34,6 +34,12 @@ namespace presentation.Controllers
             this._orderDetailRepository = orderDetailRepository;
         }
 
+        /// <summary>
+        /// اضافه کردن محموله به سبد خرید
+        /// </summary>
+        /// <param name="CargoId">آیدی محموله</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         //[PermissionAuthorize(Permissions.Order.AddToOrder, Admin.admin)]
         [HttpPost]
         public async Task<ApiResult> AddToOrder(int CargoId, CancellationToken cancellationToken)
@@ -59,10 +65,15 @@ namespace presentation.Controllers
                     return Ok();
                 }
             }
-            return NotFound();
+            return Content("چنین محموله ای یافت نشد .");
 
         }
 
+        /// <summary>
+        /// نمایش سبد خرید
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         //[PermissionAuthorize(Permissions.Order.ShowOrder, Admin.admin)]
         [HttpGet]
         public async Task<List<ShowListOrderDto>> ShowOrder(CancellationToken cancellationToken)
@@ -96,6 +107,12 @@ namespace presentation.Controllers
             return OrderList;
         }
 
+        /// <summary>
+        /// حذف محموله از سبد خرید
+        /// </summary>
+        /// <param name="OrderDetailId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         //[PermissionAuthorize(Permissions.Order.DeleteFromOrder, Admin.admin)]
         [HttpDelete]
         public async Task<ApiResult> DeleteFromOrder(int OrderDetailId, CancellationToken cancellationToken)
@@ -106,6 +123,13 @@ namespace presentation.Controllers
             return Content("OrderDetails deleted");
         }
 
+        /// <summary>
+        /// تغییر تعداد محموله در سبد خرید
+        /// </summary>
+        /// <param name="orderDetailid">ایدی فاکتور جزئیات مربوط به محموله</param>
+        /// <param name="command">دستور تغییر</param>
+        /// <param name="cancellation"></param>
+        /// <returns></returns>
         //[PermissionAuthorize(Permissions.Order.UpdateOrederDetailInOreder, Admin.admin)]
         [HttpPut]
         public async Task<ApiResult<OrderDetail>> UpdateOrederDetailInOreder(int orderDetailid, string command, CancellationToken cancellation)

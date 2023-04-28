@@ -33,7 +33,11 @@ namespace presentation.Controllers
             this._cargoRepository = cargoRepository;
         }
 
-
+        /// <summary>
+        /// گرفتن تمامی محموله ها
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [AllowAnonymous]
         [HttpGet]
         public async Task<ApiResult<List<Cargo>>> GetAllCargo(CancellationToken cancellationToken)
@@ -44,6 +48,12 @@ namespace presentation.Controllers
             return cargos;
         }
 
+        /// <summary>
+        /// گرفتن محموله ها با استفاده از ای دی آن
+        /// </summary>
+        /// <param name="id">آی دی محموله</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<ApiResult<Cargo>> GetCargoById(int id, CancellationToken cancellationToken)
@@ -54,79 +64,42 @@ namespace presentation.Controllers
             return cargo;
         }
 
-        //[PermissionAuthorize(Permissions.Cargo.AddCargo, Admin.admin)]
+        /// <summary>
+        /// اضافه کردن محموله
+        /// </summary>
+        /// <param name="cargoDto">مشخصات محموله</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [Authorize(policy: "AddCargoPolicy")]
         [HttpPost]
         public async Task<ApiResult> AddCargo(CargoDto cargoDto, CancellationToken cancellationToken)
         {
+            await _cargoRepository.AddCargoAsync(cargoDto, cancellationToken);
 
-            Cargo cargo = new Cargo()
-            {
-                CargoName = cargoDto.Name,
-                CargoStatus = 0,
-                CargoWhight = 0,
-                CargoStar = 0,
-                ItemCount = 0,
-            };
-            await _cargoRepository.AddCargoAsync(cargo, cancellationToken);
             return Content($"{cargoDto.Name} با موفقیت اضافه شد");
-            #region Fk bug
-            //int cargoId = itemDtos.First().CargoId;
-
-            //var items = new List<Item>();
-            //foreach (var itemDto in itemDtos)
-            //{
-            //    var item = new Item
-            //    {
-            //        CreateDate = DateTime.Now.ToShamsi(),
-            //        Rating = itemDto.Rating,
-            //        Name = itemDto.Name,
-            //        Whight = itemDto.Whight,
-            //        CargoId = itemDto.CargoId,
-            //    };
-            //    items.Add(item);
-            //}
-
-            //await itemRepository.AddItemAsync(items, cancellationToken);
-            //List<Item> items2 = await itemRepository.GetItemByCargoId(cargoId, cancellationToken);
-
-            //Cargo cargo = new Cargo()
-            //{
-            //    status = status,
-            //    Whight = items2.Sum(i => i.Whight),
-            //    Rating = items2.Sum(i => i.Rating),
-            //    Count = items2.Count,
-            //    Items = items2
-            //};
-
-            //cargoRepository.AddCargoAsync(cargo, cancellationToken);
-
-            //return Ok();
-            #endregion
         }
 
-        //[PermissionAuthorize(Permissions.Cargo.UpdateCargo, Admin.admin)]
+        /// <summary>
+        /// آپدیت کردن محموله
+        /// </summary>
+        /// <param name="updateCargoDto">مشخصات محموله</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [Authorize(policy: "UpdateCargoPolicy")]
         [HttpPut]
         public async Task<ApiResult> UpdateCargo(UpdateCargoDto updateCargoDto, CancellationToken cancellationToken)
         {
-            int cargoId = updateCargoDto.cargoId;
-
-            Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, cargoId);
-            if (cargo == null)
-            {
-                return NotFound();
-            }
-
-            cargo.UpdateDate = DateTime.Now.ToShamsi();
-            cargo.CargoName = updateCargoDto.Name;
-            cargo.CargoStatus = updateCargoDto.status;
-            //تغییرات وزن و تعداد آیتم ها و امتیازم محموله با آپدیت کردن آیتم های محموله انجام میشود
-
-            await _cargoRepository.UpdateAsync(cargo, cancellationToken);
-
+            await _cargoRepository.UpdateCargoAsnc(updateCargoDto, cancellationToken);
             return Content("محموله با موفقیت به روز رسانی شد");
         }
 
-        //[PermissionAuthorize(Permissions.Cargo.DeleteCargo, Admin.admin)]
+        /// <summary>
+        /// حذف محموله با استفاده از آی دی آن
+        /// </summary>
+        /// <param name="id">آی دی محموله</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [Authorize(policy: "DeleteCargoPolicy")]
         [HttpDelete("{id:int}")]
         public async Task<ApiResult> DeleteCargo(int id, CancellationToken cancellationToken)
         {

@@ -1,5 +1,6 @@
 ﻿using Data.Repositories;
 using Entities.Cargo;
+using presentation.Models.ItemDto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,10 @@ namespace Data.Contracts
 {
     public interface IItemRepository:IRepository<Item>
     {
-        public Task<List<Item>> GetItemByCargoId(int CargoId, CancellationToken cancellationToken);
+        public Task AddItemAsync(AddItemDto addItemDto, CancellationToken cancellationToken);
+        public Task UpdateItemAsync(UpdateItemDto updateItemDto, CancellationToken cancellationToken);
+        public Task DeleteItemAsync(int id, CancellationToken cancellationToken);
+
 
     }
 }

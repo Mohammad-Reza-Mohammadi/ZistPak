@@ -18,14 +18,14 @@ var AppSettingSections = builder.Configuration.GetSection(nameof(AppSettings));
 builder.Services.Configure<Utility.SwaggerConfig.AppSettings>(AppSettingSections);
 var appSettings = AppSettingSections.Get<AppSettings>();
 
+builder.Services.AddCustomIdentity(appSettings.IdentitySettings);
+
+
 // Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddJwtAuthentication(appSettings.JwtSettings);
 builder.Services.AddOurSwagger();
-
-builder.Services.AddCustomIdentity(appSettings.IdentitySettings);
 
 builder.Services.AddDbContext<ZPakContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("ZPakServer")));
@@ -40,6 +40,7 @@ builder.Services.AddScoped<IJwtSevice, JwtSevice>();
 
 //builder.Services.AddSingleton<IAuthorizationPolicyProvider, AuthorizationPolicyProvider>();
 
+builder.Services.AddJwtAuthentication(appSettings.JwtSettings);
 
 var app = builder.Build();
 app.UseCustomExceptionHandler();
@@ -48,17 +49,15 @@ app.UseCustomExceptionHandler();
 if (app.Environment.IsDevelopment())
 {
     //app.UseDeveloperExceptionPage();
-    app.UseSwagger();
-    app.UseSwaggerUI();
 }
 else
 {
     //app.UseExceptionHandler("/Error");
-    //app.UseSwagger();
-    //app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+
+app.UseSwaggerAndUI();
 
 app.UseAuthentication();
 

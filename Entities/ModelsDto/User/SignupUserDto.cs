@@ -13,7 +13,7 @@ namespace presentation.Models
         public string Password { get; set; }
         public string phoneNumber { get; set; }
         public int Age { get; set; }
-        public int? ParetnEmployeeId { get; set; }
+        public int? ParetnUsereId { get; set; }
         public UserRole Role { get; set; }
         public UserGender Gender { get; set; }
 

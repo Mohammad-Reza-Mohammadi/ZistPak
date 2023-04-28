@@ -21,14 +21,13 @@ namespace Entities.Useres
             UserIsActive = true;
         }
         public int UserAge { get; set; }
-        public string UserPhoneNumber { get; set; }
-        public string UserEmail { get; set; }
         public string UserImage { get; set; }
         public decimal UserStar { get; set; } = 0;
         public string UserToken { get; set; }
         public bool UserIsActive { get; set; }
         public string CreateDate { get; set; }
         public string? UpdateDate { get; set; }
+        public string? LastLoginDate { get; set; }
 
 
 

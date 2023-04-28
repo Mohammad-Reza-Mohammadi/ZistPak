@@ -1,4 +1,4 @@
-﻿using Data.Contracts;
+﻿    using Data.Contracts;
 using Data.Repositories;
 using ECommerce.Utility;
 using Entities.Cargo.CargoStatus;
@@ -33,6 +33,11 @@ namespace presentation.Controllers
             _cargoRepository = cargoRepository;
         }
 
+        /// <summary>
+        /// برگرداندن تمامی آیتم ها
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [AllowAnonymous]
         [HttpGet]
         public async Task<ApiResult<List<Item>>> GetAllItem(CancellationToken cancellationToken)
@@ -43,6 +48,12 @@ namespace presentation.Controllers
             return items;
         }
 
+        /// <summary>
+        /// برگرداندن آیتم با استفاده از آی دی آن
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<ApiResult<Item>> GetItemById(int id, CancellationToken cancellationToken)
@@ -53,98 +64,45 @@ namespace presentation.Controllers
             return item;
         }
 
-        //[PermissionAuthorize(Permissions.Item.AddItem, Admin.admin)]
+        /// <summary>
+        /// اضافه کردن آیتم
+        /// </summary>
+        /// <param name="addItemDto">مشخصات آیتم</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [Authorize(policy: "AddItemPolicy")]
         [HttpPost]
         public async Task<ApiResult> AddItem([FromForm] AddItemDto addItemDto, CancellationToken cancellationToken)
         {
-            int cargoId = addItemDto.CargoId;
-            
-            var cargo1 = await _cargoRepository.GetByIdAsync(cancellationToken, cargoId);    
-
-            if(cargo1 == null)
-            {
-                return Content("محموله یافت نشد");
-            }
-            var item = new Item()
-            {
-                CreateDate = DateTime.Now.ToShamsi(),
-                ItemStar = addItemDto.Rating,
-                ItemValue = addItemDto.Value,
-                ItemWhight = addItemDto.Whight,
-                CargoId = addItemDto.CargoId,
-            };
-
-            await _itemRepository.AddAsync(item, cancellationToken);
-
-            
-            List<Item> items2 = await _itemRepository.GetItemByCargoId(cargoId, cancellationToken);
-            Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, cargoId);//Update Cargo
-            {
-                cargo.CargoWhight = items2.Sum(i => i.ItemWhight);// وزن محموله
-                cargo.CargoStar = items2.Sum(i => i.ItemStar);// امتیاز محموله
-                cargo.ItemCount = items2.Count ;//تعداد ایتم موجود در محموله
-                cargo.UpdateDate = DateTime.Now.ToShamsi();// تاریخ اپدیت
-            };
-
-            await _cargoRepository.UpdateAsync(cargo, cancellationToken);
+            await _itemRepository.AddItemAsync(addItemDto, cancellationToken);
             return Ok();
         }
 
-        //[PermissionAuthorize(Permissions.Item.UpdateItem, Admin.admin)]
+        /// <summary>
+        /// آپدیت کردن آیتم
+        /// </summary>
+        /// <param name="updateItemDto"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [Authorize(policy: "UpdateItemPolicy")]
         [HttpPut]
         public async Task<ApiResult> UpdateItem([FromForm] UpdateItemDto updateItemDto, CancellationToken cancellationToken)
         {
-            int itemId = updateItemDto.ItemId;
-            int cargoId = updateItemDto.CargoId;
-
-            Item item = await _itemRepository.GetByIdAsync(cancellationToken, itemId);
-            if (itemId == null)
-            {
-                return NotFound();
-            }
-
-            item.UpdateDate = DateTime.Now.ToShamsi();
-            item.ItemWhight = updateItemDto.Whight;
-            item.ItemStar = updateItemDto.Rating;
-            item.ItemValue = updateItemDto.Value;
-            item.CargoId = updateItemDto.CargoId;
-
-            await _itemRepository.UpdateAsync(item, cancellationToken);
-
-            List<Item> listItem = await _itemRepository.GetItemByCargoId(cargoId, cancellationToken);
-            Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, cargoId);//update Cargo
-            {
-                cargo.CargoWhight = listItem.Sum(i => i.ItemWhight);
-                cargo.CargoStar = listItem.Sum(i => i.ItemStar);
-                cargo.ItemCount = listItem.Count;
-                cargo.UpdateDate = DateTime.Now.ToShamsi();
-            };
-
-            await _cargoRepository.UpdateAsync(cargo, cancellationToken);
-
+            await _itemRepository.UpdateItemAsync(updateItemDto, cancellationToken);
             return Ok();
         }
 
-        //[PermissionAuthorize(Permissions.Item.Delete, Admin.admin)]
+        /// <summary>
+        /// حذف آیتم با استفاده ازآی دی آن
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [Authorize(policy: "DeleteItemPolicy")]
         [HttpDelete("{id:int}")]
-        public async Task<ApiResult> Delete(int id, CancellationToken cancellationToken)
+        public async Task<ApiResult> DeleteItem(int id, CancellationToken cancellationToken)
         {
-            Item item = await _itemRepository.GetByIdAsync(cancellationToken, id);
-            int cargoId = item.CargoId;
-
-            await _itemRepository.DeleteAsync(item, cancellationToken);
-
-            List<Item> listItem = await _itemRepository.GetItemByCargoId(cargoId, cancellationToken);
-            Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, cargoId);
-            {
-                cargo.CargoWhight = listItem.Sum(i => i.ItemWhight);
-                cargo.CargoStar = listItem.Sum(i => i.ItemStar);
-                cargo.ItemCount = listItem.Count;
-                cargo.UpdateDate = DateTime.Now.ToShamsi();
-            };
-
-            await _cargoRepository.UpdateAsync(cargo, cancellationToken);
-
+            await _itemRepository.DeleteItemAsync(id, cancellationToken);
             return Ok();
         }
 

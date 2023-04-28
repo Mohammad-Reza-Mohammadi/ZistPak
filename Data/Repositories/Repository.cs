@@ -29,6 +29,11 @@ namespace Data.Repositories
         //ممکن است که در زمان اجرا برنامه ارتباط قطع بشود این متغیر عملیات ایسینکی که درحال اجرا است و ممکن زمان بر باشد را متوقف میکند
 
         #region Async Method
+        public async Task<TEntity> FindById(int id)
+        {
+            var user = await Entities.FindAsync(id);
+            return user;
+        }
 
         public virtual async Task<TEntity> GetByIdAsync(CancellationToken cancellationToken, params object[] ids)
         {
@@ -194,6 +199,8 @@ namespace Data.Repositories
             if (!reference.IsLoaded)
                 reference.Load();
         }
+
+
         #endregion
     }
 }
