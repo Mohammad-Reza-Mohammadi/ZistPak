@@ -3,6 +3,7 @@ using Data.Repositories;
 using ECommerce.Utility;
 using Entities.Cargo;
 using Entities.Cargo.CargoStatus;
+using Entities.ModelsDto.Cargo;
 using Entities.Useres;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -38,14 +39,27 @@ namespace presentation.Controllers
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [AllowAnonymous]
+        [Authorize(policy: "GetAllCargoPolicy")]
         [HttpGet]
         public async Task<ApiResult<List<Cargo>>> GetAllCargo(CancellationToken cancellationToken)
         {
-            List<Cargo> cargos = await _cargoRepository.TableNoTracking.ToListAsync(cancellationToken);
+            var cargos = await _cargoRepository.TableNoTracking.ToListAsync(cancellationToken);
             if (cargos == null)
                 return Content("محموله ای یافت نشد");
             return cargos;
+        }
+        /// <summary>
+        /// گرفتن تمامی محموله ها تایید شده
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<ApiResult<List<GetCargo>>> GetAllConfrimCargo(CancellationToken cancellationToken)
+        {
+          var confrimCagos =  await _cargoRepository.GetAllConfrimCargot(cancellationToken);
+
+            return confrimCagos;
         }
 
         /// <summary>
@@ -56,12 +70,10 @@ namespace presentation.Controllers
         /// <returns></returns>
         [AllowAnonymous]
         [HttpGet("{id:int}")]
-        public async Task<ApiResult<Cargo>> GetCargoById(int id, CancellationToken cancellationToken)
+        public async Task<ApiResult<GetCargo>> GetCargoById(int id, CancellationToken cancellationToken)
         {
-            Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, id);
-            if (cargo == null)
-                return Content("محموله یافت نشد");
-            return cargo;
+           var getCargo = await _cargoRepository.GetCargoById(id, cancellationToken);
+            return getCargo;
         }
 
         /// <summary>
@@ -72,11 +84,10 @@ namespace presentation.Controllers
         /// <returns></returns>
         [Authorize(policy: "AddCargoPolicy")]
         [HttpPost]
-        public async Task<ApiResult> AddCargo(CargoDto cargoDto, CancellationToken cancellationToken)
+        public async Task<ResponseOfCreatCargo> AddCargo([FromForm] CargoDto cargoDto, CancellationToken cancellationToken)
         {
-            await _cargoRepository.AddCargoAsync(cargoDto, cancellationToken);
-
-            return Content($"{cargoDto.Name} با موفقیت اضافه شد");
+            var result = await _cargoRepository.AddCargoAsync(cargoDto, cancellationToken);
+            return result;
         }
 
         /// <summary>
@@ -87,7 +98,7 @@ namespace presentation.Controllers
         /// <returns></returns>
         [Authorize(policy: "UpdateCargoPolicy")]
         [HttpPut]
-        public async Task<ApiResult> UpdateCargo(UpdateCargoDto updateCargoDto, CancellationToken cancellationToken)
+        public async Task<ApiResult> UpdateCargo([FromForm] UpdateCargoDto updateCargoDto, CancellationToken cancellationToken)
         {
             await _cargoRepository.UpdateCargoAsnc(updateCargoDto, cancellationToken);
             return Content("محموله با موفقیت به روز رسانی شد");
@@ -101,7 +112,7 @@ namespace presentation.Controllers
         /// <returns></returns>
         [Authorize(policy: "DeleteCargoPolicy")]
         [HttpDelete("{id:int}")]
-        public async Task<ApiResult> DeleteCargo(int id, CancellationToken cancellationToken)
+        public async Task<ApiResult> DeleteCargo([FromForm] int id, CancellationToken cancellationToken)
         {
             Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, id);
             cargo.CargoStatus = Status.Rejected;

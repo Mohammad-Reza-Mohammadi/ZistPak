@@ -24,16 +24,23 @@ namespace presentation.Models
                 yield return new ValidationResult("نام کاربری نمیتواند test باشد", new[] { nameof(UserName) });
             }
 
-            if (Password.Equals("123456"))
+            if(Role.Equals(UserRole.Supervisor) || Role.Equals(UserRole.Contractor) || Role.Equals(UserRole.CarEmployee) || Role.Equals(UserRole.ExhibitorEmployee))
             {
-                yield return new ValidationResult("رمز عبور نمیتواند 1234356 باشد", new[] { nameof(Password) });
+                if (ParetnUsereId.Equals(null))
+                {
+                    yield return new ValidationResult($"لطفا ارگان یا شخصی که مربوطه رابیان کنید", new[] { nameof(ParetnUsereId) });
+                }
             }
+            //if (Password.Equals("123456"))
+            //{
+            //    yield return new ValidationResult("رمز عبور نمیتواند 1234356 باشد", new[] { nameof(Password) });
+            //}
 
             // این شرط میتواند برای وبسایت های مربوط به استخدام باشد
-            if (Gender == UserGender.Male && Age > 30)
-            {
-                yield return new ValidationResult("آقایان بالای 30 سال نمیتوانند ثبت نام کنند", new[] { nameof(Gender), nameof(Age) });
-            }
+            //if (Gender == UserGender.Male && Age > 30)
+            //{
+            //    yield return new ValidationResult("آقایان بالای 30 سال نمیتوانند ثبت نام کنند", new[] { nameof(Gender), nameof(Age) });
+            //}
         }
     }
 }

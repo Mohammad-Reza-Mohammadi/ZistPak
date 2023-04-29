@@ -1,8 +1,12 @@
 ﻿using Data.Contracts;
 using ECommerce.Utility;
 using Entities.Cargo;
+using Entities.Cargo.CargoStatus;
+using Entities.ModelsDto.Cargo;
 using Entities.Useres;
 using Microsoft.AspNetCore.Http;
+using Microsoft.CodeAnalysis.Operations;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.SqlServer.Query.Internal;
 using Microsoft.IdentityModel.Tokens;
 using presentation.Models.Cargo;
@@ -26,14 +30,12 @@ namespace Data.Repositories
         }
 
 
-        public async Task AddCargoAsync(CargoDto cargoDto, CancellationToken cancellationToken)
+        public async Task<ResponseOfCreatCargo> AddCargoAsync(CargoDto cargoDto, CancellationToken cancellationToken)
         {
-            //await DbContext.Set<Cargo>().AddAsync(cargo, cancellationToken);
-            //DbContext.SaveChanges();
             Cargo cargo = new Cargo()
             {
                 CargoName = cargoDto.Name,
-                CargoStatus = 0,
+                CargoStatus = Status.Imported,
                 CargoWhight = 0,
                 CargoStar = 0,
                 ItemCount = 0,
@@ -41,7 +43,13 @@ namespace Data.Repositories
             cargo.CreateDate = DateTime.Now.ToShamsi();
 
             await base.AddAsync(cargo, cancellationToken);
-            //return;
+
+            var responseOfCreatCargo = new ResponseOfCreatCargo()
+            {
+                cagoId = cargo.Id,
+                cargoName = cargo.CargoName
+            };
+            return responseOfCreatCargo;
         }
         public async Task UpdateCargoAsnc(UpdateCargoDto updateCargoDto, CancellationToken cancellationToken)
         {
@@ -60,9 +68,47 @@ namespace Data.Repositories
             await base.UpdateAsync(cargo, cancellationToken);
 
         }
+        public async Task<List<GetCargo>> GetAllConfrimCargot( CancellationToken cancellationToken)
+        {
+            var cargos = await DbContext.Set<Cargo>().ToListAsync(cancellationToken);
+            if (cargos == null)
+                throw new NotFoundException("محموله ای یافت نشد");
 
+            var confrimCagos = new List<GetCargo>();
+            foreach (var cargo in cargos)
+            {
+                if (cargo.CargoStatus.Equals(Status.Confirm))
+                {
+                    confrimCagos.Add(new GetCargo
+                    {
+                        Id = cargo.Id,
+                        CargoName = cargo.CargoName,
+                        CargoStatus = cargo.CargoStatus,
+                        CargoStar = cargo.CargoStar,
+                        ItemCount = cargo.ItemCount,
+                        CargoWhight = cargo.CargoWhight
+                    });
+                }
+            };
+            return  confrimCagos;
+        }
+        public async Task<GetCargo> GetCargoById(int cargoId,CancellationToken cancellationToken)
+        {
+            var cargo = await base.GetByIdAsync(cancellationToken, cargoId);
+            if (cargo == null)
+                throw new NotFoundException("محموله ای یافت نشد");
+            if (!cargo.CargoStatus.Equals(Status.Confirm))
+                throw new NotFoundException("محموله ای یافت نشد");
 
+            var getCargo = new GetCargo();
+            getCargo.Id = cargo.Id;
+            getCargo.CargoName = cargo.CargoName;
+            getCargo.CargoStar = cargo.CargoStar;
+            getCargo.CargoStatus = cargo.CargoStatus;
+            getCargo.CargoWhight = getCargo.CargoWhight;
 
+            return getCargo;
+        }
 
     }
 }

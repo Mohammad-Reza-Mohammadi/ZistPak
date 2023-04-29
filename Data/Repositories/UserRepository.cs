@@ -12,15 +12,33 @@ using System.Security.Claims;
 using Utility.Exceptions;
 using Utility.SwaggerConfig;
 using Utility.Utility;
+using static Utility.SwaggerConfig.Permissions.Permissions;
 using User = Entities.Useres.User;
 
 namespace Data.Repositories
 {
+    public class ClaimEqualityComparer : IEqualityComparer<Claim>
+    {
+        public static ClaimEqualityComparer Default { get; } = new ClaimEqualityComparer();
+
+        public bool Equals(Claim x, Claim y)
+        {
+            return x.Type == y.Type;
+        }
+
+        public int GetHashCode(Claim obj)
+        {
+            return obj.Type.GetHashCode();
+        }
+    }
     public class UserRepository : Repository<User>, IUserRepository
     {
         private readonly AppSettings _appSettings;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;
+        //this is username and password of main admin
+        private readonly string _adminName = "admin";
+        private readonly string _adminPass = "1234567";
 
         public UserRepository(ZPakContext dbContext, IOptions<AppSettings> appSettings, UserManager<User> userManager, RoleManager<Role> roleManager)
             : base(dbContext)
@@ -46,6 +64,8 @@ namespace Data.Repositories
         public async Task<bool> AddUserAsync(SignupUserDto signupUserDto, CancellationToken cancellationToken)
         {
             var exists = await TableNoTracking.AnyAsync(p => p.UserName == signupUserDto.UserName);
+            var parentUserExists = await base.GetByIdAsync(cancellationToken, signupUserDto.ParetnUsereId);
+
 
             if (exists)
             {
@@ -63,166 +83,295 @@ namespace Data.Repositories
 
             };
 
-            switch (signupUserDto.Role)
+            if (signupUserDto.UserName.Equals(_adminName) && signupUserDto.Password.Equals(_adminPass))
             {
-                case UserRole.Admin:
-                    {
-                        var musnicipalityRole = new Role
-                        {
-                            Name = signupUserDto.Role.ToString(),
-                            Description = "This is Admin Role",
-                        };
-                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
-                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
 
-                        var claimList = new List<Claim>
+                var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                if (!result.Succeeded)
+                {
+                    throw new Exception(result.Errors.First().Description);
+                }
+                // add user to database 
+                var addUserResult = await _userManager.UpdateAsync(user);
+                if (!addUserResult.Succeeded)
+                {
+                    throw new Exception(addUserResult.Errors.First().Description);
+                }
+
+                var AdminRole = new Role
+                {
+                    Name = signupUserDto.Role.ToString(),
+                    Description = "This is Admin Role",
+                };
+                var roleCreateResult = await _roleManager.CreateAsync(AdminRole);
+                var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, AdminRole.Name);
+
+                var claimList = new List<Claim>
                         {
                             new Claim("GetAllUser", "true"),
                             new Claim("GetUserById", "true"),
+                            new Claim("ActiveUserAdmin", "true"),
                         };
-                        var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
-                        break;
-                    }
-                case UserRole.Municipality:
-                    {
-                        user.UserIsActive = false;
-                        var result = await _userManager.CreateAsync(user, signupUserDto.Password);
-                        var musnicipalityRole = new Role
+                var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+            }
+            else
+            {
+                switch (signupUserDto.Role)
+                {
+                    case UserRole.Admin:
                         {
-                            Name = signupUserDto.Role.ToString(),
-                            Description = "This is Municipality Role",                            
-                        };
-                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
-                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
+                            user.UserIsActive = false;
+                            var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                            if (!result.Succeeded)
+                            {
+                                throw new Exception(result.Errors.First().Description);
+                            }
+                            // add user to database 
+                            var addUserResult = await _userManager.UpdateAsync(user);
+                            if (!addUserResult.Succeeded)
+                            {
+                                throw new Exception(addUserResult.Errors.First().Description);
+                            }
 
-                        //var claimList = new List<Claim>
-                        //{
-                        //    new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
+                            var AdminRole = new Role
+                            {
+                                Name = signupUserDto.Role.ToString(),
+                                Description = "This is Admin Role",
+                            };
+                            var roleCreateResult = await _roleManager.CreateAsync(AdminRole);
+                            var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, AdminRole.Name);
 
-                        //};
-                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
-                        break;
-                    }
-                case UserRole.Supervisor:
-                    {
-                        user.UserIsActive = false;
-                        var result = await _userManager.CreateAsync(user, signupUserDto.Password);
-
-                        var musnicipalityRole = new Role
+                            var claimList = new List<Claim>
+                            {
+                                new Claim("GetAllUser", "true"),
+                                new Claim("GetUserById", "true"),
+                            };
+                            var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                            break;
+                        }
+                    case UserRole.Municipality:
                         {
-                            Name = signupUserDto.Role.ToString(),
-                            Description = "This is Supervisor Role",
-                        };
-                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
-                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
+                            user.UserIsActive = false;
+                            var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                            if (!result.Succeeded)
+                            {
+                                throw new Exception(result.Errors.First().Description);
+                            }
+                            // add user to database 
+                            var addUserResult = await _userManager.UpdateAsync(user);
+                            if (!addUserResult.Succeeded)
+                            {
+                                throw new Exception(addUserResult.Errors.First().Description);
+                            }
 
-                        //var claimList = new List<Claim>
-                        //{
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //};
-                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
-                        break;
-                    }
-                case UserRole.Contractor:
-                    {
-                        user.UserIsActive = false;
-                        var result = await _userManager.CreateAsync(user, signupUserDto.Password);
-                        var musnicipalityRole = new Role
+                            var musnicipalityRole = new Role
+                            {
+                                Name = signupUserDto.Role.ToString(),
+                                Description = "This is Municipality Role",
+                            };
+                            var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
+                            var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
+
+                            var claimList = new List<Claim>
+                            {
+                                new Claim("ActiveUserMuniciaplity", "true"),
+                                //new Claim("CanModifyCargo", "true"),
+
+                            };
+                            var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                            break;
+                        }
+                    case UserRole.Supervisor:
                         {
-                            Name = signupUserDto.Role.ToString(),
-                            Description = "This is Contractor Role",
-                        };
-                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
-                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
+                            if (!await _userManager.IsInRoleAsync(parentUserExists, "Municipality"))
+                            {
+                                throw new BadRequestException("شما نمیتوانید به این فرد یا ارگان مرتبط شوید");
+                            }
 
-                        //var claimList = new List<Claim>
-                        //{
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //};
-                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
-                        break;
-                    }
-                case UserRole.ExhibitorEmployee:
-                    {
-                        user.UserIsActive = false;
-                        var result = await _userManager.CreateAsync(user, signupUserDto.Password);
-                        var musnicipalityRole = new Role
+                            user.UserIsActive = false;
+                            var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                            if (!result.Succeeded)
+                            {
+                                throw new Exception(result.Errors.First().Description);
+                            }
+                            // add user to database 
+                            var addUserResult = await _userManager.UpdateAsync(user);
+                            if (!addUserResult.Succeeded)
+                            {
+                                throw new Exception(addUserResult.Errors.First().Description);
+                            }
+
+                            var supervisorRole = new Role
+                            {
+                                Name = signupUserDto.Role.ToString(),
+                                Description = "This is Supervisor Role",
+                            };
+                            var roleCreateResult = await _roleManager.CreateAsync(supervisorRole);
+                            var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, supervisorRole.Name);
+
+                            var claimList = new List<Claim>
+                            {
+                                 new Claim("GetAllCargo", "true"),
+                                //new Claim("CanModifyCargo", "true"),
+                                //new Claim("CanModifyCargo", "true"),
+                                //new Claim("CanModifyCargo", "true"),
+                                //new Claim("CanModifyCargo", "true"),
+                                //new Claim("CanModifyCargo", "true"),
+                            };
+                            var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                            break;
+                        }
+                    case UserRole.Contractor:
                         {
-                            Name = signupUserDto.Role.ToString(),
-                            Description = "This is ExhibitorEmployee Role",
-                        };
-                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
-                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
+                            if (!await _userManager.IsInRoleAsync(parentUserExists, "Municipality"))
+                            {
+                                throw new BadRequestException("شما نمیتوانید به این فرد یا ارگان مرتبط شوید");
+                            }
+                            user.UserIsActive = false;
+                            var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                            if (!result.Succeeded)
+                            {
+                                throw new Exception(result.Errors.First().Description);
+                            }
+                            // add user to database 
+                            var addUserResult = await _userManager.UpdateAsync(user);
+                            if (!addUserResult.Succeeded)
+                            {
+                                throw new Exception(addUserResult.Errors.First().Description);
+                            }
 
-                        //var claimList = new List<Claim>
-                        //{
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //};
-                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
-                        break;
-                    }
-                case UserRole.CarEmployee:
-                    {
-                        user.UserIsActive = false;
-                        var result = await _userManager.CreateAsync(user, signupUserDto.Password);
-                        var musnicipalityRole = new Role
+                            var contractorRole = new Role
+                            {
+                                Name = signupUserDto.Role.ToString(),
+                                Description = "This is Contractor Role",
+                            };
+                            var roleCreateResult = await _roleManager.CreateAsync(contractorRole);
+                            var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, contractorRole.Name);
+
+                            var claimList = new List<Claim>
+                            {
+                                new Claim("ActiveUserCotractor", "true"),
+                                //new Claim("CanModifyCargo", "true"),
+                                //new Claim("CanModifyCargo", "true"),
+                                //new Claim("CanModifyCargo", "true"),
+                                //new Claim("CanModifyCargo", "true"),
+                                //new Claim("CanModifyCargo", "true"),
+                            };
+                            var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                            break;
+                        }
+                    case UserRole.ExhibitorEmployee:
                         {
-                            Name = signupUserDto.Role.ToString(),
-                            Description = "This is CarEmployee Role",
-                        };
-                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
-                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
+                            if (!await _userManager.IsInRoleAsync(parentUserExists, "Contractor"))
+                            {
+                                throw new BadRequestException("شما نمیتوانید به این فرد یا ارگان مرتبط شوید");
+                            }
+                            user.UserIsActive = false;
+                            var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                            if (!result.Succeeded)
+                            {
+                                throw new Exception(result.Errors.First().Description);
+                            }
+                            // add user to database 
+                            var addUserResult = await _userManager.UpdateAsync(user);
+                            if (!addUserResult.Succeeded)
+                            {
+                                throw new Exception(addUserResult.Errors.First().Description);
+                            }
 
-                        //var claimList = new List<Claim>
-                        //{
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //};
-                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
-                        break;
-                    }
-                case UserRole.Customer:
-                    {
-                        var musnicipalityRole = new Role
+                            var exhibitorEmployeeRole = new Role
+                            {
+                                Name = signupUserDto.Role.ToString(),
+                                Description = "This is ExhibitorEmployee Role",
+                            };
+                            var roleCreateResult = await _roleManager.CreateAsync(exhibitorEmployeeRole);
+                            var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, exhibitorEmployeeRole.Name);
+
+                            //var claimList = new List<Claim>
+                            //{
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //};
+                            //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                            break;
+                        }
+                    case UserRole.CarEmployee:
                         {
-                            Name = signupUserDto.Role.ToString(),
-                            Description = "This is Customer Role",
-                        };
-                        var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
-                        var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
+                            if (!await _userManager.IsInRoleAsync(parentUserExists, "Contractor"))
+                            {
+                                throw new BadRequestException("شما نمیتوانید به این فرد یا ارگان مرتبط شوید");
+                            }
 
-                        //var claimList = new List<Claim>
-                        //{
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //    //new Claim("CanModifyCargo", "true"),
-                        //};
-                        //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
-                        break;
-                    }
+                            user.UserIsActive = false;
+                            var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                            if (!result.Succeeded)
+                            {
+                                throw new Exception(result.Errors.First().Description);
+                            }
+                            // add user to database 
+                            var addUserResult = await _userManager.UpdateAsync(user);
+                            if (!addUserResult.Succeeded)
+                            {
+                                throw new Exception(addUserResult.Errors.First().Description);
+                            }
+                            var carEmployeeRole = new Role
+                            {
+                                Name = signupUserDto.Role.ToString(),
+                                Description = "This is CarEmployee Role",
+                            };
+                            var roleCreateResult = await _roleManager.CreateAsync(carEmployeeRole);
+                            var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, carEmployeeRole.Name);
+
+                            //var claimList = new List<Claim>
+                            //{
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //};
+                            //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                            break;
+                        }
+                    case UserRole.Customer:
+                        {
+                            var result = await _userManager.CreateAsync(user, signupUserDto.Password);
+                            if (!result.Succeeded)
+                            {
+                                throw new Exception(result.Errors.First().Description);
+                            }
+                            // add user to database 
+                            var addUserResult = await _userManager.UpdateAsync(user);
+                            if (!addUserResult.Succeeded)
+                            {
+                                throw new Exception(addUserResult.Errors.First().Description);
+                            }
+                            var musnicipalityRole = new Role
+                            {
+                                Name = signupUserDto.Role.ToString(),
+                                Description = "This is Customer Role",
+                            };
+                            var roleCreateResult = await _roleManager.CreateAsync(musnicipalityRole);
+                            var AddRoleAndUserToDB = await _userManager.AddToRoleAsync(user, musnicipalityRole.Name);
+
+                            //var claimList = new List<Claim>
+                            //{
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //    //new Claim("CanModifyCargo", "true"),
+                            //};
+                            //var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(user, claimList);
+                            break;
+                        }
+                }
             }
             return true;
         }
@@ -238,26 +387,49 @@ namespace Data.Repositories
 
         public async Task<bool> ChangePermissinByID(int id, CancellationToken cancellationToken)
         {
-            var user = await _userManager.FindByIdAsync(id.ToString());
+            var user = await base.GetByIdAsync(cancellationToken, id);
             if (user == null)
             {
                 return false;
             }
 
-            if (await _userManager.IsInRoleAsync(user, "Supervisor"))
+            var existingClaims = await _userManager.GetClaimsAsync(user);
+
+
+            var newClaims = new List<Claim>();
+
+            // اضافه کردن کلیم‌هایی که کاربر هنوز ندارد
+            if (!existingClaims.Any(c => c.Type == "AddItem"))
+                newClaims.Add(new Claim("AddItem", "true"));
+            if (!existingClaims.Any(c => c.Type == "UpdateItem"))
+                newClaims.Add(new Claim("UpdateItem", "true"));
+            if (!existingClaims.Any(c => c.Type == "DeleteItem"))
+                newClaims.Add(new Claim("DeleteItem", "true"));
+            if (!existingClaims.Any(c => c.Type == "AddCargo"))
+                newClaims.Add(new Claim("AddCargo", "true"));
+            if (!existingClaims.Any(c => c.Type == "UpdateCargo"))
+                newClaims.Add(new Claim("UpdateCargo", "true"));
+            if (!existingClaims.Any(c => c.Type == "DeleteCargo"))
+                newClaims.Add(new Claim("DeleteCargo", "true"));
+
+            // حذف کلیم‌های تکراری
+            var distinctNewClaims = newClaims
+                .Except(existingClaims, ClaimEqualityComparer.Default)
+                .Distinct(ClaimEqualityComparer.Default);
+
+            var claimsToRemove = existingClaims.Intersect(newClaims, ClaimEqualityComparer.Default);
+            if (claimsToRemove.Any())
             {
-                var claimList = new List<Claim>
+                var result = await _userManager.RemoveClaimsAsync(user, claimsToRemove);
+                if (!result.Succeeded)
                 {
-                    //ItemClaim
-                    new Claim("AddItem", "true"),
-                    new Claim("UpdateItem", "true"),
-                    new Claim("DeleteItem", "true"),
-                    //CargoClaim
-                    new Claim("AddCargo", "true"),
-                    new Claim("UpdateCargo", "true"),
-                    new Claim("UpdateCargo", "true"),
-                };
-                var result = await _userManager.AddClaimsAsync(user, claimList);
+                    return false;
+                }
+            }
+
+            if (distinctNewClaims.Any())
+            {
+                var result = await _userManager.AddClaimsAsync(user, distinctNewClaims);
                 if (!result.Succeeded)
                 {
                     return false;
@@ -274,19 +446,49 @@ namespace Data.Repositories
 
             foreach (var supervisor in supervisors)
             {
-                var claimList = new List<Claim>
-                {
-                    //ItemClaim
-                    new Claim("AddItem", "true"),
-                    new Claim("UpdateItem", "true"),
-                    new Claim("DeleteItem", "true"),
-                    //CargoClaim
-                    new Claim("AddCargo", "true"),
-                    new Claim("UpdateCargo", "true"),
-                    new Claim("UpdateCargo", "true"),
 
-                };
-                var AddUserCAndUserToDB = await _userManager.AddClaimsAsync(supervisor, claimList);
+                var existingClaims = await _userManager.GetClaimsAsync(supervisor);
+
+
+                var newClaims = new List<Claim>();
+
+                // اضافه کردن کلیم‌هایی که کاربر هنوز ندارد
+                if (!existingClaims.Any(c => c.Type == "AddItem"))
+                    newClaims.Add(new Claim("AddItem", "true"));
+                if (!existingClaims.Any(c => c.Type == "UpdateItem"))
+                    newClaims.Add(new Claim("UpdateItem", "true"));
+                if (!existingClaims.Any(c => c.Type == "DeleteItem"))
+                    newClaims.Add(new Claim("DeleteItem", "true"));
+                if (!existingClaims.Any(c => c.Type == "AddCargo"))
+                    newClaims.Add(new Claim("AddCargo", "true"));
+                if (!existingClaims.Any(c => c.Type == "UpdateCargo"))
+                    newClaims.Add(new Claim("UpdateCargo", "true"));
+                if (!existingClaims.Any(c => c.Type == "DeleteCargo"))
+                    newClaims.Add(new Claim("DeleteCargo", "true"));
+
+                // حذف کلیم‌های تکراری
+                var distinctNewClaims = newClaims
+                    .Except(existingClaims, ClaimEqualityComparer.Default)
+                    .Distinct(ClaimEqualityComparer.Default);
+
+                var claimsToRemove = existingClaims.Intersect(newClaims, ClaimEqualityComparer.Default);
+                if (claimsToRemove.Any())
+                {
+                    var result = await _userManager.RemoveClaimsAsync(supervisor, claimsToRemove);
+                    if (!result.Succeeded)
+                    {
+                        throw new LogicException("مشکلی رخ داده است");
+                    }
+                }
+
+                if (distinctNewClaims.Any())
+                {
+                    var result = await _userManager.AddClaimsAsync(supervisor, distinctNewClaims);
+                    if (!result.Succeeded)
+                    {
+                        throw new LogicException("مشکلی رخ داده است");
+                    }
+                }
             }
         }
 

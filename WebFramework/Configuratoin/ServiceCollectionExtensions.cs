@@ -12,8 +12,6 @@ using System.Text;
 using Utility.Api;
 using Utility.Exceptions;
 using Utility.SwaggerConfig;
-//using Microsoft.AspNetCore.Authentication;
-//using Microsoft.AspNetCore.Authentication.Claims;
 
 
 namespace WebFramework.Configuratoin
@@ -39,6 +37,30 @@ namespace WebFramework.Configuratoin
                     policy.RequireAssertion(context =>
                         context.User.IsInRole("Admin") ||// برای افرادی که نقش Admin دارند، این Policy را اعمال کنید
                         context.User.HasClaim("GetUserById", "true"));// برای افرادی که Claim با عنوان GetUserById و مقدار "true" را دارند، این Policy را اعمال کنید
+
+                });
+                options.AddPolicy("ActiveUserAdminPolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();// برای همه کاربرانی که وارد سیستم شده‌اند، این Policy را اعمال کنید
+                    policy.RequireAssertion(context =>
+                        context.User.IsInRole("Admin") ||// برای افرادی که نقش Admin دارند، این Policy را اعمال کنید
+                        context.User.HasClaim("ActiveUserAdmin", "true"));// برای افرادی که Claim با عنوان GetUserById و مقدار "true" را دارند، این Policy را اعمال کنید
+
+                });
+                options.AddPolicy("ActiveUserMuniciaplityPolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();// برای همه کاربرانی که وارد سیستم شده‌اند، این Policy را اعمال کنید
+                    policy.RequireAssertion(context =>
+                        context.User.IsInRole("Municipality") ||// برای افرادی که نقش Admin دارند، این Policy را اعمال کنید
+                        context.User.HasClaim("ActiveUserMuniciaplity", "true"));// برای افرادی که Claim با عنوان ActiveUserMuniciaplity و مقدار "true" را دارند، این Policy را اعمال کنید
+
+                });
+                options.AddPolicy("ActiveUserCotractorPolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();// برای همه کاربرانی که وارد سیستم شده‌اند، این Policy را اعمال کنید
+                    policy.RequireAssertion(context =>
+                        context.User.IsInRole("Contractor") ||// برای افرادی که نقش Admin دارند، این Policy را اعمال کنید
+                        context.User.HasClaim("ActiveUserCotractor", "true"));// برای افرادی که Claim با عنوان ActiveUserCotractor و مقدار "true" را دارند، این Policy را اعمال کنید
 
                 });
                 //ItemPolicy
@@ -85,6 +107,14 @@ namespace WebFramework.Configuratoin
                         context.User.HasClaim("DeleteCargo", "true"));// برای افرادی که Claim با عنوان DeleteCargo و مقدار "true" را دارند، این Policy را اعمال کنید
 
                 });
+                options.AddPolicy("GetAllCargoPolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();// برای همه کاربرانی که وارد سیستم شده‌اند، این Policy را اعمال کنید
+                    policy.RequireAssertion(context =>
+                        context.User.HasClaim("GetAllCargo", "true"));// برای افرادی که Claim با عنوان DeleteCargo و مقدار "true" را دارند، این Policy را اعمال کنید
+
+                });
+
 
             });
             services.AddAuthentication(options =>

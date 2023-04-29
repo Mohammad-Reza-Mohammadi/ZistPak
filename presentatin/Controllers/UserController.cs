@@ -130,18 +130,31 @@ namespace presentation.Controllers
         {
 
             var addUserResponce = await _userRepository.AddUserAsync(signupUserDto, cancellationToken);
-            if (addUserResponce.Equals(true))
+            if (signupUserDto.UserName.Equals("admin") && signupUserDto.Password.Equals("1234567") && signupUserDto.ParetnUsereId.Equals(null))
             {
-                if (signupUserDto.Role.Equals(UserRole.Customer))
+                return Content($"حساب کاربری شما با موفقیت اضافه شد.");
+            }
+            else
+            {
+                if (addUserResponce.Equals(true))
                 {
-                    return Content($"{signupUserDto.UserName} عزیز به وبسایت ما خوش آمدید .");
-                }
-                else
-                {
-                    var userParent = await userManager.FindByIdAsync(signupUserDto.ParetnUsereId.ToString());
-                    var parentName = userParent.UserName;
-
-                    return Content($"{signupUserDto.UserName} عزیز به وبسایت ما خوش آمدید ، به منظور تایید حساب کابریتان به تایید {parentName}  نیاز دارید ، پس از تایید حساب کابریتان به پنل کاربری خود دسترسی خواهید داشت .");
+                    if (signupUserDto.Role.Equals(UserRole.Customer))
+                    {
+                        return Content($"{signupUserDto.UserName} عزیز به وبسایت ما خوش آمدید .");
+                    }
+                    else
+                    {
+                        if (signupUserDto.ParetnUsereId.Equals(null))
+                        {
+                            return Content($"{signupUserDto.UserName} عزیز به وبسایت ما خوش آمدید ، به منظور تایید حساب کابریتان به تایید مسؤلان مربوطه نیاز دارید ، پس از تایید حساب کابریتان به پنل کاربری خود دسترسی خواهید داشت .");
+                        }
+                        else
+                        {
+                            var userParent = await userManager.FindByIdAsync(signupUserDto.ParetnUsereId.ToString());
+                            var parentName = userParent.UserName;
+                            return Content($"{signupUserDto.UserName} عزیز به وبسایت ما خوش آمدید ، به منظور تایید حساب کابریتان به تایید {parentName}  نیاز دارید ، پس از تایید حساب کابریتان به پنل کاربری خود دسترسی خواهید داشت .");
+                        }
+                    }
                 }
             }
             return Content("در روند ایجاد حساب کاربری شما مشکلی پیش آمده است! ");
@@ -161,7 +174,7 @@ namespace presentation.Controllers
             var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int userId1 = Convert.ToInt32(userId);
 
-            var getUser = await _userRepository.GetByIdAsync(cancellationToken, userId1.ToString());
+            var getUser = await _userRepository.FindById(userId1);
 
             #region update user
 
@@ -170,11 +183,11 @@ namespace presentation.Controllers
             getUser.PhoneNumber = user.PhoneNumber;
             getUser.Email = user.Email;
             // ElementAt(i)
-            getUser.UserAddresses.ElementAt(0).UserAddressTitle = user.AddressTitle;
-            getUser.UserAddresses.ElementAt(0).UserAddressCity = user.City;
-            getUser.UserAddresses.ElementAt(0).UserAddressTown = user.Town;
-            getUser.UserAddresses.ElementAt(0).UserAddressStreet = user.Street;
-            getUser.UserAddresses.ElementAt(0).UserAddressPostalCode = user.PostalCode;
+            //getUser.UserAddresses.ElementAt(0).UserAddressTitle = user.AddressTitle;
+            //getUser.UserAddresses.ElementAt(0).UserAddressCity = user.City;
+            //getUser.UserAddresses.ElementAt(0).UserAddressTown = user.Town;
+            //getUser.UserAddresses.ElementAt(0).UserAddressStreet = user.Street;
+            //getUser.UserAddresses.ElementAt(0).UserAddressPostalCode = user.PostalCode;
 
             #endregion
 
@@ -190,11 +203,11 @@ namespace presentation.Controllers
         /// <param name="id"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id:int}")]
         public async Task<ApiResult> Delete(int id, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetByIdAsync(cancellationToken, id.ToString());
+            var user = await _userRepository.FindById(id);
             user.UserIsActive = false;
             await _userRepository.UpdateAsync(user, cancellationToken);
 
@@ -211,7 +224,6 @@ namespace presentation.Controllers
         [HttpPost]
         public async Task<ApiResult> AddSoperviserPermissionById(int Id, CancellationToken cancellationToken)
         {
-
             bool Result = await _userRepository.ChangePermissinByID(Id, cancellationToken);
 
             if (Result == false)
@@ -235,6 +247,66 @@ namespace presentation.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// فعال کردن کاربران با استفاده از آی دی(دسترسی ادمین)
+        /// </summary>
+        /// <param name="id">ای کاربر مورد نظر</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [Authorize(policy: "ActiveUserAdminPolicy")]
+        [HttpPost("{id:int}")]
+        public async Task<ActionResult> ActiveUserAdmin(int id, CancellationToken cancellationToken)
+        {
+            var user = await _userRepository.GetByIdAsync(cancellationToken, id);
+            if (!await userManager.IsInRoleAsync(user, "Municipality"))
+            {
+                throw new BadRequestException("شما نمیتوانید مشخصات کاربر مورد نظر را تغییر دهید");
+            }
+            user.UserIsActive = true;
+            await _userRepository.UpdateAsync(user, cancellationToken);
+            return Ok();
+        }
+
+        /// <summary>
+        /// فعال کردن کاربران با استفاده از آی دی(دسترسی شهرداری)
+        /// </summary>
+        /// <param name="id">ای کاربر مورد نظر</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [Authorize(policy: "ActiveUserMuniciaplityPolicy")]
+        [HttpPost("{id:int}")]
+        public async Task<ActionResult> ActiveUserMuniciaplity(int id, CancellationToken cancellationToken)
+        {
+            var user = await _userRepository.GetByIdAsync(cancellationToken, id);
+            if (await userManager.IsInRoleAsync(user, "Supervisor") || await userManager.IsInRoleAsync(user, "Contractor"))
+            {
+                user.UserIsActive = true;
+                await _userRepository.UpdateAsync(user, cancellationToken);
+                return Ok();
+            }
+            throw new BadRequestException("شما نمیتوانید مشخصات کاربر مورد نظر را تغییر دهید");
+        }
+
+        /// <summary>
+        /// فعال کردن کاربران با استفاده از آی دی(دسترسی پیمانکار)
+        /// </summary>
+        /// <param name="id">ای کاربر مورد نظر</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+
+        [Authorize(policy: "ActiveUserCotractorPolicy")]
+        [HttpPost("{id:int}")]
+        public async Task<ActionResult> ActiveUserContractor(int id, CancellationToken cancellationToken)
+        {
+            var user = await _userRepository.GetByIdAsync(cancellationToken, id);
+            if (await userManager.IsInRoleAsync(user, "CarEmployee") || await userManager.IsInRoleAsync(user, "ExhibitorEmployee"))
+            {
+                user.UserIsActive = true;
+                await _userRepository.UpdateAsync(user, cancellationToken);
+                return Ok();
+            }
+            throw new BadRequestException("شما نمیتوانید مشخصات کاربر مورد نظر را تغییر دهید");
+        }
 
     }
 }
