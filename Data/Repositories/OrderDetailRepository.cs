@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Utility.SwaggerConfig.Permissions.Permissions;
+using Order = Entities.Orders.Order;
 
 namespace Data.Repositories
 {
@@ -41,7 +43,7 @@ namespace Data.Repositories
 
                             var sum = orderDetails.Sum(od => od.CountCargo * od.StarCargo);
 
-                            Order order = await DbContext.Set<Order>().Where(o=>o.Id == orderId).FirstOrDefaultAsync();
+                            var order = await DbContext.Set<Order>().Where(o=>o.Id == orderId).FirstOrDefaultAsync();
                             order.OrderStar = sum;
                             DbContext.Update(order);
                             await DbContext.SaveChangesAsync();
@@ -60,6 +62,11 @@ namespace Data.Repositories
 
 
 
+        }
+
+        public async Task<OrderDetail> GetByOrderId(int orderId,int orederDetailId, CancellationToken cancellationToken)
+        {
+            return await DbContext.Set<OrderDetail>().FirstOrDefaultAsync(od => od.OrderId == orderId && od.Id == orederDetailId, cancellationToken);
         }
     }
 }

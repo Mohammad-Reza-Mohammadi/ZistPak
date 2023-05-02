@@ -65,7 +65,7 @@ namespace Data.Repositories
                 var details = await DbContext.Set<OrderDetail>().SingleOrDefaultAsync(o => o.OrderId == order.Id && o.CargoId == cargoId);
                 if (details == null)
                 {
-                    Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken,cargoId);
+                    Cargo cargo = await _cargoRepository.GetByIdAsync(cancellationToken, cargoId);
                     decimal cargoStar = cargo.CargoStar;
 
                     await DbContext.Set<OrderDetail>().AddAsync(new OrderDetail()
@@ -83,7 +83,8 @@ namespace Data.Repositories
                     details.CountCargo += 1;
                     DbContext.Update(details);
                 }
-                    await DbContext.SaveChangesAsync();
+                await DbContext.SaveChangesAsync();
+
             }
 
             await UpdateSum(order.Id, cancellationToken);
@@ -92,13 +93,11 @@ namespace Data.Repositories
 
         async Task UpdateSum(int orderId, CancellationToken cancellationToken)
         {
-            Order order = await base.GetByIdAsync(cancellationToken, orderId);
-            OrderDetail orderDetail = await DbContext.Set<OrderDetail>().Where(od=>od.OrderId == orderId).SingleOrDefaultAsync();
+            var order = await base.GetByIdAsync(cancellationToken, orderId);
+            var count =  DbContext.Set<OrderDetail>().Where(od => od.OrderId == orderId).Select(d=>d.CountCargo).First();
+            var star = DbContext.Set<OrderDetail>().Where(od => od.OrderId == orderId).Select(d => d.StarCargo).First();
 
-            int countCargoInOrderdetail = orderDetail.CountCargo;
-            decimal starCargo = orderDetail.StarCargo;
-
-            var sum = countCargoInOrderdetail * starCargo;
+            var sum = count * star;
 
             order.OrderStar = sum;
             DbContext.Update(order);

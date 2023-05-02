@@ -11,10 +11,9 @@ namespace Data.Contracts
 {
     public interface IOrderDetailRepository : IRepository<OrderDetail>
     {
-     public Task<OrderDetail> ChangeOrderDetailById(int OrderDetailId, string command, CancellationToken cancellationToken);
+        public Task<OrderDetail> ChangeOrderDetailById(int OrderDetailId, string command, CancellationToken cancellationToken);
+        public Task<OrderDetail> GetByOrderId(int id, int orederDetailId, CancellationToken cancellationToken);
     }
-
-
 }
 
 
