@@ -19,6 +19,8 @@ namespace Data.Contracts
         public Task AllSupervisorChangePermissin(CancellationToken cancellationToken);
         public Task<bool> GetUserByName(string userName);
         public Task UpdateLastLoginDateAsync(User user, CancellationToken cancellationToken);
+        public Task FinalizeThePurchase(int userId, CancellationToken cancellationToken);
+
 
 
     }

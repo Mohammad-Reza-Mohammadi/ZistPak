@@ -8,6 +8,7 @@ using presentation.Models;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Threading.Tasks.Dataflow;
+using Utility.Exceptions;
 using Utility.SwaggerConfig.Permissions;
 using WebFramework.Api;
 using WebFramework.Filters;
@@ -26,12 +27,14 @@ namespace presentation.Controllers
         private readonly IOrderRepository _orderRepository;
         private readonly ICargoRepository _cargoRepository;
         private readonly IOrderDetailRepository _orderDetailRepository;
+        private readonly IUserRepository _userRepository;
 
-        public OrderController(IOrderRepository orderRepository, ICargoRepository cargoRepository, IOrderDetailRepository orderDetailRepository)
+        public OrderController(IOrderRepository orderRepository, ICargoRepository cargoRepository, IOrderDetailRepository orderDetailRepository,IUserRepository userRepository)
         {
             this._orderRepository = orderRepository;
             this._cargoRepository = cargoRepository;
             this._orderDetailRepository = orderDetailRepository;
+            this._userRepository = userRepository;
         }
 
         /// <summary>
@@ -139,6 +142,21 @@ namespace presentation.Controllers
             return orderDetail;
         }
 
+        /// <summary>
+        /// نهایی کردن سبد خرید
+        /// </summary>
+        /// <param name="cancellation"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<ApiResult> FinalizeThePurchase(CancellationToken cancellation)
+        {
+            string CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int currentUserId = Convert.ToInt32(CurrentUserId);
+
+            await _userRepository.FinalizeThePurchase(currentUserId,cancellation);
+            return Ok();
+            
+        }
 
 
     }

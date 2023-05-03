@@ -21,6 +21,7 @@ namespace Data.EntityConfiguration.OrderConfiguration
             builder.Property(c => c.UpdateDate).IsRequired(false);
             builder.Property(c => c.StarCargo).IsRequired();
             builder.Property(c => c.CountCargo).IsRequired();
+            builder.Property(c => c.Star).IsRequired();
             #endregion
 
             #region Navigation Property

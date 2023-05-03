@@ -5,6 +5,7 @@ using Entities.Orders;
 using Entities.Useres;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design.Internal;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
 using System.Collections.Generic;
@@ -55,8 +56,9 @@ namespace Data.Repositories
                     StarCargo = cargoStar,
                     OrderId = order.Id,
                     CargoId = cargoId,
+                    Star = cargoStar
 
-                });
+                }) ;
                 await DbContext.SaveChangesAsync();
 
             }
@@ -75,6 +77,7 @@ namespace Data.Repositories
                         OrderId = order.Id,
                         StarCargo = cargoStar,
                         CargoId = cargoId,
+                        Star = cargoStar,
                     });
 
                 }
@@ -93,16 +96,24 @@ namespace Data.Repositories
 
         async Task UpdateSum(int orderId, CancellationToken cancellationToken)
         {
+
             var order = await base.GetByIdAsync(cancellationToken, orderId);
-            var count =  DbContext.Set<OrderDetail>().Where(od => od.OrderId == orderId).Select(d=>d.CountCargo).First();
-            var star = DbContext.Set<OrderDetail>().Where(od => od.OrderId == orderId).Select(d => d.StarCargo).First();
-
-            var sum = count * star;
-
-            order.OrderStar = sum;
+            //var count =  DbContext.Set<OrderDetail>().Where(od => od.OrderId == orderId).Select(d=>d.CountCargo).First();
+            var orderDetails =  DbContext.Set<OrderDetail>().Where(od => od.OrderId == orderId);
+            foreach(var orderDetail in orderDetails)
+            {
+                var cargoStar = orderDetail.StarCargo;
+                var cargoCount = orderDetail.CountCargo;
+                orderDetail.Star = cargoStar * cargoCount;
+                DbContext.Update(orderDetail);
+            }
+                DbContext.SaveChanges();
+            var sumOrderDetailStar = orderDetails.Sum(od => od.Star);
+            
+            order.OrderStar = sumOrderDetailStar;
             DbContext.Update(order);
             await DbContext.SaveChangesAsync();
-
+            
         }
 
         public async Task<List<OrderDetail>> GetOrderDetails(int orderId, CancellationToken cancellationToken)

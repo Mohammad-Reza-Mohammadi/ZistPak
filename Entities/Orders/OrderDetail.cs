@@ -11,9 +11,9 @@ namespace Entities.Orders
     public class OrderDetail : IntBaseEntity
     {
 
-        public decimal StarCargo { get; set; }
+        public decimal StarCargo { get; set; }//this is Crago Star
         public int CountCargo { get; set; }
-
+        public decimal Star { get; set; } = 0;// this is OrderDetail Star
 
         public int OrderId { get; set; }
         public int CargoId { get; set; }

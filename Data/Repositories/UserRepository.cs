@@ -1,11 +1,13 @@
 ﻿using Data.Contracts;
 using ECommerce.Utility;
+using Entities.Orders;
 using Entities.User.Owned;
 using Entities.User.UserProprety.EnumProperty;
 using Entities.Useres;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using presentation.Models;
 using System.Security.Claims;
@@ -13,6 +15,7 @@ using Utility.Exceptions;
 using Utility.SwaggerConfig;
 using Utility.Utility;
 using static Utility.SwaggerConfig.Permissions.Permissions;
+using Order = Entities.Orders.Order;
 using User = Entities.Useres.User;
 
 namespace Data.Repositories
@@ -496,6 +499,21 @@ namespace Data.Repositories
         {
             user.LastLoginDate = DateTime.Now.ToShamsi();
             return UpdateAsync(user, cancellationToken);
+        }
+
+        public async Task FinalizeThePurchase(int userId,CancellationToken cancellationToken)
+        {
+            // check the open order for CurrentUserId
+            var order = DbContext.Set<Order>().Where(o => o.UserId == userId && !o.IsFinaly).SingleOrDefault();
+            if (order.Equals(null))
+                throw new LogicException("سبد خرید شما خالی است");
+            var user = await base.GetByIdAsync(cancellationToken, userId);
+            user.UserStar += order.OrderStar;
+            order.IsFinaly=true;
+            DbContext.UpdateRange(order, user);
+            await DbContext.SaveChangesAsync();
+            return;
+            
         }
     }
 }
