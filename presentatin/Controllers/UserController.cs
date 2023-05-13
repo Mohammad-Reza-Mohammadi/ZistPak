@@ -246,7 +246,11 @@ namespace presentation.Controllers
         public async Task<ActionResult> ActiveUserAdmin(int id, CancellationToken cancellationToken)
         {
             var user = await _userRepository.GetByIdAsync(cancellationToken, id);
-            if (!await userManager.IsInRoleAsync(user, "Municipality"))
+            if (user == null)
+            {
+                throw new BadRequestException("چنین کاربری وجود ندارد!");
+            }
+            else if(!await userManager.IsInRoleAsync(user, "Municipality"))
             {
                 throw new BadRequestException("شما نمیتوانید مشخصات کاربر مورد نظر را تغییر دهید");
             }
@@ -266,7 +270,11 @@ namespace presentation.Controllers
         public async Task<ActionResult> ActiveUserMuniciaplity(int id, CancellationToken cancellationToken)
         {
             var user = await _userRepository.GetByIdAsync(cancellationToken, id);
-            if (await userManager.IsInRoleAsync(user, "Supervisor") || await userManager.IsInRoleAsync(user, "Contractor"))
+            if (user == null)
+            {
+                throw new BadRequestException("چنین کاربری وجود ندارد!");
+            }
+            else if(await userManager.IsInRoleAsync(user, "Supervisor") || await userManager.IsInRoleAsync(user, "Contractor"))
             {
                 user.UserIsActive = true;
                 await _userRepository.UpdateAsync(user, cancellationToken);
@@ -287,7 +295,11 @@ namespace presentation.Controllers
         public async Task<ActionResult> ActiveUserContractor(int id, CancellationToken cancellationToken)
         {
             var user = await _userRepository.GetByIdAsync(cancellationToken, id);
-            if (await userManager.IsInRoleAsync(user, "CarEmployee") || await userManager.IsInRoleAsync(user, "ExhibitorEmployee"))
+            if (user == null)
+            {
+                throw new BadRequestException("چنین کاربری وجود ندارد!");
+            }
+            else if(await userManager.IsInRoleAsync(user, "CarEmployee") || await userManager.IsInRoleAsync(user, "ExhibitorEmployee"))
             {
                 user.UserIsActive = true;
                 await _userRepository.UpdateAsync(user, cancellationToken);
