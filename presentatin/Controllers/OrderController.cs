@@ -1,18 +1,11 @@
 ﻿using Data.Contracts;
 using Entities.Orders;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using presentation.Models;
-using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
-using System.Threading.Tasks.Dataflow;
-using Utility.Exceptions;
-using Utility.SwaggerConfig.Permissions;
 using WebFramework.Api;
 using WebFramework.Filters;
-using static Utility.SwaggerConfig.Permissions.Permissions;
 using Order = Entities.Orders.Order;
 
 namespace presentation.Controllers
