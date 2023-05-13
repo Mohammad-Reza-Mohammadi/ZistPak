@@ -1,29 +1,17 @@
 ﻿using Data.Contracts;
-using Data.Repositories;
-using ECommerce.Utility;
 using Entities.ModelsDto.User;
-using Entities.User.Owned;
 using Entities.User.UserProprety.EnumProperty;
 using Entities.Useres;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 using presentation.Models;
-using Services;
 using Services.Services;
-using System.Drawing;
-using System.Net.Mime;
 using System.Security.Claims;
 using Utility.Exceptions;
-using Utility.SwaggerConfig.Permissions;
-using Utility.Utility;
 using WebFramework.Api;
 using WebFramework.Filters;
-using static Utility.SwaggerConfig.Permissions.Permissions;
 using User = Entities.Useres.User;
 
 namespace presentation.Controllers
