@@ -151,5 +151,16 @@ namespace presentation.Controllers
             
         }
 
+        [HttpGet]
+        public async Task<ApiResult> FinalizeThePurchase1(CancellationToken cancellation)
+        {
+            string CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int currentUserId = Convert.ToInt32(CurrentUserId);
+
+            await _userRepository.FinalizeThePurchase(currentUserId, cancellation);
+            return Ok();
+
+        }
+
     }
 }
