@@ -13,6 +13,7 @@ using presentation.Models;
 using System.Security.Claims;
 using Utility.Exceptions;
 using Utility.SwaggerConfig;
+using Utility.UserSecrets;
 using Utility.Utility;
 using static Utility.SwaggerConfig.Permissions.Permissions;
 using Order = Entities.Orders.Order;
@@ -40,15 +41,17 @@ namespace Data.Repositories
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;
         //this is username and password of main admin
-        private readonly string _adminName = "admin";
-        private readonly string _adminPass = "1234567";
+        private readonly MainAdmin _mainAmin;
+        //private readonly string _adminName = "admin";
+        //private readonly string _adminPass = "1234567";
 
-        public UserRepository(ZPakContext dbContext, IOptions<AppSettings> appSettings, UserManager<User> userManager, RoleManager<Role> roleManager)
+        public UserRepository(ZPakContext dbContext, IOptions<AppSettings> appSettings, UserManager<User> userManager, RoleManager<Role> roleManager, IOptions<MainAdmin> mainAdmin)
             : base(dbContext)
         {
             _appSettings = appSettings.Value;
             this._userManager = userManager;
             this._roleManager = roleManager;
+            _mainAmin = mainAdmin.Value;
         }
 
         public async Task<Address> Getaddress(int userId)
@@ -86,7 +89,7 @@ namespace Data.Repositories
 
             };
 
-            if (signupUserDto.UserName.Equals(_adminName) && signupUserDto.Password.Equals(_adminPass))
+            if (signupUserDto.UserName.Equals(_mainAmin.Name) && signupUserDto.Password.Equals(_mainAmin.Password))
             {
 
                 var result = await _userManager.CreateAsync(user, signupUserDto.Password);

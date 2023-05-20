@@ -33,8 +33,11 @@ namespace presentation.Controllers
         private readonly RoleManager<Role> roleManager;
         private readonly SignInManager<User> signInManager;
 
-        public UserController(IUserRepository userRepository, IJwtSevice jwtSevice, UserManager<User> userManager, RoleManager<Role> roleManager,
-            SignInManager<User> signInManager)
+        public UserController(IUserRepository userRepository
+            , IJwtSevice jwtSevice
+            , UserManager<User> userManager
+            , RoleManager<Role> roleManager
+            , SignInManager<User> signInManager)
         {
             this._userRepository = userRepository;
             this._jwtSevice = jwtSevice;

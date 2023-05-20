@@ -9,6 +9,7 @@ using Microsoft.VisualBasic;
 using Services.Services;
 using Utility.SwaggerConfig;
 using Utility.SwaggerConfig.Permissions;
+using Utility.UserSecrets;
 using WebFramework.Configuratoin;
 using WebFramework.MiddleWares;
 
@@ -19,6 +20,9 @@ builder.Services.Configure<Utility.SwaggerConfig.AppSettings>(AppSettingSections
 var appSettings = AppSettingSections.Get<AppSettings>();
 
 builder.Services.AddCustomIdentity(appSettings.IdentitySettings);
+
+//var AdminSecrert = builder.Configuration["MainAdmin:Name"];
+builder.Configuration.GetSection("MainAdmin").Get<MainAdmin>();
 
 
 // Add services to the container.
